@@ -1,6 +1,11 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using OpenBanking_API_Service.Data;
+using OpenBanking_API_Service.Service.Implementation;
+using OpenBanking_API_Service.Service.Interface;
 using OpenBanking_API_Service_Common.Library.Models;
 using Serilog;
 using System.Text;
@@ -17,12 +22,34 @@ var logger = new LoggerConfiguration()
 builder.Logging.ClearProviders();
 builder.Logging.AddSerilog(logger);
 
+// Adding config for EFCore
+
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// Adding config for Identity
+builder.Services.AddIdentity<IdentityUser, IdentityRole>()
+    .AddEntityFrameworkStores<ApplicationDbContext>()
+    .AddDefaultTokenProviders();
+builder.Services.Configure<DataProtectionTokenProviderOptions>(
+    options => options.TokenLifespan = TimeSpan.FromMinutes(30)
+
+    );
+
+
 // Email config for MailKit
 
 var emailConfig = builder.Configuration.GetSection("EmailConfiguration").Get<EmailConfiguration>();
 builder.Services.AddSingleton(emailConfig);
 
-builder.Services.AddSingleton(emailConfig);
+builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IUserService, UserService>();
+
+// Adding config for required email
+builder.Services.Configure<IdentityOptions>(
+    options => options.SignIn.RequireConfirmedEmail = true
+    );
 
 // Adding Authentication settings
 builder.Services.AddAuthentication(options =>
