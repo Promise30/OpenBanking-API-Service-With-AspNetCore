@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using OpenBanking_API_Service.Data;
 using OpenBanking_API_Service.Dtos;
 using OpenBanking_API_Service.Service.Interface;
 using OpenBanking_API_Service_Common.Library.Models;
@@ -12,13 +13,13 @@ namespace OpenBanking_API_Service.Controllers
     {
         private readonly ILogger<AuthenticationController> _logger;
         private readonly IUserService _userService;
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<ApplicationUser> _userManager;
         private readonly IEmailService _emailService;
 
         public AuthenticationController(ILogger<AuthenticationController> logger,
                                         IUserService userService,
                                         IEmailService emailService,
-                                        UserManager<IdentityUser> userManager)
+                                        UserManager<ApplicationUser> userManager)
         {
             _logger = logger;
             _userService = userService;
