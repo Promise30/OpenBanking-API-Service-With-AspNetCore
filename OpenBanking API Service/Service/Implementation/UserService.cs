@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
+using OpenBanking_API_Service.Data;
 using OpenBanking_API_Service.Dtos;
 using OpenBanking_API_Service.Service.Interface;
 using OpenBanking_API_Service_Common.Library.Models;
@@ -12,15 +13,15 @@ namespace OpenBanking_API_Service.Service.Implementation
 {
     public class UserService : IUserService
     {
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
-        private readonly SignInManager<IdentityUser> _signInManager;
+        private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly ILogger<UserService> _logger;
         private readonly IConfiguration _configuration;
 
-        public UserService(UserManager<IdentityUser> userManager,
+        public UserService(UserManager<ApplicationUser> userManager,
                             RoleManager<IdentityRole> roleManager,
-                            SignInManager<IdentityUser> signInManager,
+                            SignInManager<ApplicationUser> signInManager,
                             ILogger<UserService> logger,
                             IConfiguration configuration)
         {
@@ -40,7 +41,7 @@ namespace OpenBanking_API_Service.Service.Implementation
                 {
                     return APIResponse<object>.Create(HttpStatusCode.UnprocessableEntity, "User already exists", null);
                 }
-                IdentityUser user = new IdentityUser
+                ApplicationUser user = new ApplicationUser
                 {
                     Email = registerUser.Email,
                     UserName = registerUser.UserName,
@@ -72,7 +73,7 @@ namespace OpenBanking_API_Service.Service.Implementation
             }
         }
 
-        public async Task<APIResponse<LoginResponse>> GetJwtTokenAsync(IdentityUser user)
+        public async Task<APIResponse<LoginResponse>> GetJwtTokenAsync(ApplicationUser user)
         {
             var authClaims = new List<Claim>
             {
