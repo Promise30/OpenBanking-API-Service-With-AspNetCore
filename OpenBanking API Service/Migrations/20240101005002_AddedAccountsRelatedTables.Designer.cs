@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using OpenBanking_API_Service.Data;
 
@@ -11,9 +12,11 @@ using OpenBanking_API_Service.Data;
 namespace OpenBanking_API_Service.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240101005002_AddedAccountsRelatedTables")]
+    partial class AddedAccountsRelatedTables
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -51,14 +54,14 @@ namespace OpenBanking_API_Service.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "cb96eb18-646c-47d3-98c1-be8d126a35ba",
+                            Id = "a367dcdd-58d4-4ffa-9bc9-408be82548cd",
                             ConcurrencyStamp = "1",
                             Name = "Admin",
                             NormalizedName = "ADMIN"
                         },
                         new
                         {
-                            Id = "cb6c801e-cfd1-481d-bdd0-912c9a97244f",
+                            Id = "15f939af-838e-4267-966f-f5558c3a0366",
                             ConcurrencyStamp = "2",
                             Name = "User",
                             NormalizedName = "USER"
@@ -307,18 +310,18 @@ namespace OpenBanking_API_Service.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid>("AccountId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<double>("Amount")
                         .HasColumnType("float");
 
-                    b.Property<Guid>("BankAccountId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTimeOffset>("TransactionDate")
-                        .HasColumnType("datetimeoffset");
+                    b.Property<int>("Pin")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("BankAccountId");
+                    b.HasIndex("AccountId");
 
                     b.ToTable("BankDeposits");
                 });
@@ -443,7 +446,7 @@ namespace OpenBanking_API_Service.Migrations
                 {
                     b.HasOne("OpenBanking_API_Service_Common.Library.Entities.Account.BankAccount", "BankAccount")
                         .WithMany("BankDeposits")
-                        .HasForeignKey("BankAccountId")
+                        .HasForeignKey("AccountId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
