@@ -86,9 +86,11 @@ namespace OpenBanking_API_Service.Service.Implementation
                     {
                         BankAccountId = bankAccount.BankAccountId,
                         Amount = bankAccountDepositDto.Amount,
+                        Balance = bankAccount.AccountBalance,
+                        AccountNumber = accountNumber,
                         TransactionDate = DateTimeOffset.UtcNow
                     };
-
+                    await _dbContext.BankDeposits.AddAsync(depositTransaction);
                     await _dbContext.SaveChangesAsync();
                     var depositResponse = new CreateBankDepositResponse
                     {
@@ -109,6 +111,47 @@ namespace OpenBanking_API_Service.Service.Implementation
                 return new APIResponse<CreateBankDepositResponse>(HttpStatusCode.BadRequest, "Transaction unsuccessful", null);
             }
         }
+        public async Task<APIResponse<AccountWithdrawalResponse>> BankAccountWithdrawal(CreateBankAccountWithdrawal bankAccountWithdrawal)
+        {
+            string currentUserId = _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            // Retrieve the user's bank account
+            var bankAccount = _dbContext.BankAccounts.SingleOrDefault(b => b.UserId == currentUserId);
+            if (bankAccount != null)
+            {
+                // check if the pin matches
+                if (bankAccount.Pin == bankAccountWithdrawal.Pin)
+                {
+                    if (bankAccount.AccountBalance > bankAccountWithdrawal.Amount)
+                    {
+                        bankAccount.AccountBalance -= bankAccountWithdrawal.Amount;
+                        var withDrawalTransaction = new BankWithdrawal
+                        {
+                            Amount = bankAccountWithdrawal.Amount,
+                            AccountId = bankAccount.BankAccountId,
+                            AccountNumber = bankAccount.AccountNumber,
+                            TransactionDate = DateTimeOffset.UtcNow,
+                            Balance = bankAccount.AccountBalance
+
+                        };
+                        await _dbContext.BankWithdrawals.AddAsync(withDrawalTransaction);
+                        await _dbContext.SaveChangesAsync();
+                        var withDrawalResponse = new AccountWithdrawalResponse
+                        {
+                            AccountNumber = bankAccount.AccountNumber,
+                            DebitAmount = bankAccountWithdrawal.Amount,
+                            Balance = bankAccount.AccountBalance,
+                            TransactionDate = withDrawalTransaction.TransactionDate
+                        };
+                        return new APIResponse<AccountWithdrawalResponse>(HttpStatusCode.OK, "Amount has been withdrawn successfully", withDrawalResponse);
+                    }
+                    return new APIResponse<AccountWithdrawalResponse>(HttpStatusCode.BadRequest, "Insufficient funds for withdrawal operation", null);
+                }
+                return new APIResponse<AccountWithdrawalResponse>(HttpStatusCode.BadRequest, "Invalid PIN", null);
+            }
+            return new APIResponse<AccountWithdrawalResponse>(HttpStatusCode.NotFound, "Bank account not found", null);
+        }
+
 
         #region PrivateMethods
         private static string Generate11DigitAccountNumber()
@@ -126,8 +169,6 @@ namespace OpenBanking_API_Service.Service.Implementation
             // Convert the long value to string before returning
             return generatedLongValue.ToString();
         }
-
-
         #endregion
     }
 }
