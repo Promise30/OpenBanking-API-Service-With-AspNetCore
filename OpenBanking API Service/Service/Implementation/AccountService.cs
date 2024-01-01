@@ -25,7 +25,6 @@ namespace OpenBanking_API_Service.Service.Implementation
             if (_httpContextAccessor.HttpContext.User.Identity.IsAuthenticated)
             {
                 string currentUserId = _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
                 var bankAccount = new BankAccount
                 {
                     Firstname = createBankAccountDto.Firstname,
@@ -41,12 +40,10 @@ namespace OpenBanking_API_Service.Service.Implementation
                     AccountOpeningDate = DateTimeOffset.UtcNow,
                     AccountBalance = 0.0,
                     UserId = currentUserId
-
                 };
 
                 await _dbContext.BankAccounts.AddAsync(bankAccount);
                 await _dbContext.SaveChangesAsync();
-
                 var bankAccountResponse = new CreateAccountResponse
                 {
                     BankAccountId = bankAccount.BankAccountId,
@@ -68,9 +65,6 @@ namespace OpenBanking_API_Service.Service.Implementation
                 return new APIResponse<CreateAccountResponse>(HttpStatusCode.OK, "Account created successfully", bankAccountResponse);
             }
             return new APIResponse<CreateAccountResponse>(HttpStatusCode.Unauthorized, "User not authenticated", null);
-
-
-
         }
 
         public async Task<APIResponse<CreateBankDepositResponse>> BankAccountDeposit(string accountNumber, CreateBankAccountDepositDto bankAccountDepositDto)
@@ -98,17 +92,15 @@ namespace OpenBanking_API_Service.Service.Implementation
                         Deposit = bankAccountDepositDto.Amount,
                         Balance = bankAccount.AccountBalance,
                         TransactionDate = depositTransaction.TransactionDate
-
                     };
 
                     return new APIResponse<CreateBankDepositResponse>(HttpStatusCode.OK, "Funds deposited successfully.", depositResponse);
                 }
-                return new APIResponse<CreateBankDepositResponse>(HttpStatusCode.NotFound, "Account with the provided account number does not exist", null);
+                return new APIResponse<CreateBankDepositResponse>(HttpStatusCode.NotFound, "Account with the provided account number does not exist.", null);
             }
             catch (Exception ex)
             {
-
-                return new APIResponse<CreateBankDepositResponse>(HttpStatusCode.BadRequest, "Transaction unsuccessful", null);
+                return new APIResponse<CreateBankDepositResponse>(HttpStatusCode.BadRequest, "Transaction unsuccessful.", null);
             }
         }
         public async Task<APIResponse<AccountWithdrawalResponse>> BankAccountWithdrawal(CreateBankAccountWithdrawal bankAccountWithdrawal)
@@ -143,15 +135,63 @@ namespace OpenBanking_API_Service.Service.Implementation
                             Balance = bankAccount.AccountBalance,
                             TransactionDate = withDrawalTransaction.TransactionDate
                         };
-                        return new APIResponse<AccountWithdrawalResponse>(HttpStatusCode.OK, "Amount has been withdrawn successfully", withDrawalResponse);
+                        return new APIResponse<AccountWithdrawalResponse>(HttpStatusCode.OK, "Amount has been withdrawn successfully.", withDrawalResponse);
                     }
-                    return new APIResponse<AccountWithdrawalResponse>(HttpStatusCode.BadRequest, "Insufficient funds for withdrawal operation", null);
+                    return new APIResponse<AccountWithdrawalResponse>(HttpStatusCode.BadRequest, "Insufficient funds for withdrawal operation.", null);
                 }
-                return new APIResponse<AccountWithdrawalResponse>(HttpStatusCode.BadRequest, "Invalid PIN", null);
+                return new APIResponse<AccountWithdrawalResponse>(HttpStatusCode.BadRequest, "Invalid PIN.", null);
             }
-            return new APIResponse<AccountWithdrawalResponse>(HttpStatusCode.NotFound, "Bank account not found", null);
+            return new APIResponse<AccountWithdrawalResponse>(HttpStatusCode.NotFound, "Bank account not found.", null);
         }
 
+        public async Task<APIResponse<CreateAccountTransferResponse>> BankAccountTransfer(CreateAccountTransfer bankAccountTransfer)
+        {
+            string currentUserId = _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            // Retrieve the sender's and receiver's account number
+            var senderAccount = _dbContext.BankAccounts.SingleOrDefault(a => a.UserId == currentUserId);
+            var receiverAccount = _dbContext.BankAccounts.SingleOrDefault(a => a.AccountNumber == bankAccountTransfer.DestinationAccount);
+
+            if (senderAccount == null)
+                return APIResponse<CreateAccountTransferResponse>.Create(HttpStatusCode.NotFound, "Sender's bank account not found.", null);
+
+            // Check if the receiver's account is not found
+            if (receiverAccount == null)
+                return APIResponse<CreateAccountTransferResponse>.Create(HttpStatusCode.NotFound, "Receiver's bank account not found.", null);
+
+
+            // Check if the sender has insufficient funds
+            if (senderAccount.AccountBalance < bankAccountTransfer.Amount)
+                return APIResponse<CreateAccountTransferResponse>.Create(HttpStatusCode.BadRequest, "Insufficient funds for transfer.", null);
+
+            // Update the sender's and receiver's account balances
+            senderAccount.AccountBalance -= bankAccountTransfer.Amount;
+            receiverAccount.AccountBalance += bankAccountTransfer.Amount;
+            // Create a transfer transaction record
+            var transferTransaction = new BankTransfer
+            {
+                Amount = bankAccountTransfer.Amount,
+                TransactionDate = DateTimeOffset.UtcNow,
+                SourceAccount = senderAccount.AccountNumber,
+                Balance = senderAccount.AccountBalance,
+                DestinationAccount = bankAccountTransfer.DestinationAccount,
+                Narration = bankAccountTransfer.Narration,
+                AccountId = senderAccount.BankAccountId
+
+            };
+            await _dbContext.BankTransfers.AddAsync(transferTransaction);
+            await _dbContext.SaveChangesAsync();
+
+            var transferResponse = new CreateAccountTransferResponse
+            {
+                SourceAccount = bankAccountTransfer.SourceAccount,
+                DestinationAccount = bankAccountTransfer.DestinationAccount,
+                Balance = transferTransaction.Balance,
+                Amount = bankAccountTransfer.Amount,
+                Narration = bankAccountTransfer.Narration,
+                TransactionDate = DateTimeOffset.UtcNow,
+            };
+            return APIResponse<CreateAccountTransferResponse>.Create(HttpStatusCode.OK, "Transfer successful.", transferResponse);
+        }
 
         #region PrivateMethods
         private static string Generate11DigitAccountNumber()
