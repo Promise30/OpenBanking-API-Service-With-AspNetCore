@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using OpenBanking_API_Service.Data;
 
@@ -11,9 +12,11 @@ using OpenBanking_API_Service.Data;
 namespace OpenBanking_API_Service.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240101172944_UpdatedBankTransferModel")]
+    partial class UpdatedBankTransferModel
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -51,14 +54,14 @@ namespace OpenBanking_API_Service.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "e101a69a-db2c-4243-b560-48d5a1416e5b",
+                            Id = "188bc835-30b9-42de-813e-54910c9d26ed",
                             ConcurrencyStamp = "1",
                             Name = "Admin",
                             NormalizedName = "ADMIN"
                         },
                         new
                         {
-                            Id = "d4100fb4-2f04-453e-9b93-e5250630b706",
+                            Id = "29d3dbad-3c79-4cd7-9b91-6c0bcc1463d4",
                             ConcurrencyStamp = "2",
                             Name = "User",
                             NormalizedName = "USER"
@@ -336,14 +339,11 @@ namespace OpenBanking_API_Service.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("AccountId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<double>("Amount")
                         .HasColumnType("float");
 
-                    b.Property<double>("Balance")
-                        .HasColumnType("float");
+                    b.Property<Guid>("BankAccountId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("DestinationAccount")
                         .IsRequired()
@@ -362,7 +362,7 @@ namespace OpenBanking_API_Service.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AccountId");
+                    b.HasIndex("BankAccountId");
 
                     b.ToTable("BankTransfers");
                 });
@@ -473,7 +473,7 @@ namespace OpenBanking_API_Service.Migrations
                 {
                     b.HasOne("OpenBanking_API_Service_Common.Library.Entities.Account.BankAccount", "BankAccount")
                         .WithMany("BankTransfers")
-                        .HasForeignKey("AccountId")
+                        .HasForeignKey("BankAccountId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
