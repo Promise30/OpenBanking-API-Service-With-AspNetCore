@@ -6,7 +6,7 @@ namespace OpenBanking_API_Service_Common.Library.Entities.Account
     {
         public Guid BankAccountId { get; set; }
         public string AccountNumber { get; set; }
-        public decimal AccountBalance { get; set; }
+        public double AccountBalance { get; set; }
         public string Firstname { get; set; }
         public string Lastname { get; set; }
         public string Middlename { get; set; }
@@ -18,7 +18,7 @@ namespace OpenBanking_API_Service_Common.Library.Entities.Account
 
         // Account Holder Information
         public int Pin { get; set; }
-        public Guid UserId { get; set; }
+        public string UserId { get; set; }
         public virtual ApplicationUser User { get; set; }
         public DateTimeOffset AccountOpeningDate { get; set; }
         public ICollection<BankTransfer> BankTransfers { get; } = new List<BankTransfer>();
