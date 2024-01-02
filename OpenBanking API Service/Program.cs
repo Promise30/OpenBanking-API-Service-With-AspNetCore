@@ -45,10 +45,21 @@ builder.Services.AddSingleton(emailConfig);
 
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IAccountService, AccountService>();
 
 // Adding config for required email
 builder.Services.Configure<IdentityOptions>(
-    options => options.SignIn.RequireConfirmedEmail = true
+    options =>
+    {
+        options.SignIn.RequireConfirmedEmail = true;
+
+        // Password Settings
+        options.Password.RequireDigit = true;
+        options.Password.RequireLowercase = true;
+        options.Password.RequireNonAlphanumeric = true;
+        options.Password.RequireUppercase = false;
+
+    }
     );
 
 // Adding Authentication settings
