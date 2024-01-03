@@ -8,7 +8,7 @@
 
         public double Balance { get; set; }
         public DateTimeOffset TransactionDate { get; set; }
-        public Guid BankAccountId { get; set; }
-        public virtual BankAccount BankAccount { get; set; }
+        public Guid AccountId { get; set; }
+        public BankAccount BankAccount { get; set; }
     }
 }
