@@ -1,4 +1,5 @@
-﻿using OpenBanking_API_Service.Data;
+﻿using Microsoft.EntityFrameworkCore;
+using OpenBanking_API_Service.Data;
 using OpenBanking_API_Service.Dtos.AccountsDto;
 using OpenBanking_API_Service.Service.Interface;
 using OpenBanking_API_Service_Common.Library.Entities.Account;
@@ -11,11 +12,14 @@ namespace OpenBanking_API_Service.Service.Implementation
     public class AccountService : IAccountService
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
+
         private readonly ApplicationDbContext _dbContext;
         public AccountService(IHttpContextAccessor httpContextAccessor,
+
                               ApplicationDbContext dbContext)
         {
             _httpContextAccessor = httpContextAccessor;
+
             _dbContext = dbContext;
         }
         public async Task<APIResponse<CreateAccountResponse>> CreateBankAccount(CreateBankAccountDto createBankAccountDto)
@@ -78,7 +82,7 @@ namespace OpenBanking_API_Service.Service.Implementation
 
                     var depositTransaction = new BankDeposit
                     {
-                        BankAccountId = bankAccount.BankAccountId,
+                        AccountId = bankAccount.BankAccountId,
                         Amount = bankAccountDepositDto.Amount,
                         Balance = bankAccount.AccountBalance,
                         AccountNumber = accountNumber,
@@ -192,6 +196,50 @@ namespace OpenBanking_API_Service.Service.Implementation
             };
             return APIResponse<CreateAccountTransferResponse>.Create(HttpStatusCode.OK, "Transfer successful.", transferResponse);
         }
+        public async Task<APIResponse<TransactionHistoryDto>> BankAccountTransactionHistory(Guid accountId)
+        {
+            var bankAccount = _dbContext.BankAccounts
+                                            .Include(a => a.BankTransfers)
+                                            .Include(a => a.BankWithdrawals)
+                                            .Include(a => a.BankDeposits)
+                                            .FirstOrDefault(a => a.BankAccountId == accountId);
+
+            if (bankAccount == null)
+            {
+                return APIResponse<TransactionHistoryDto>.Create(HttpStatusCode.NotFound, $"Account not found.", null);
+            }
+
+            var transactionHistory = new TransactionHistoryDto
+            {
+                BankTransfers = bankAccount.BankTransfers.Select(transfer => new CreateAccountTransferResponse
+                {
+                    SourceAccount = transfer.SourceAccount,
+                    Amount = transfer.Amount,
+                    Balance = transfer.Balance,
+                    Narration = transfer.Narration,
+                    DestinationAccount = transfer.DestinationAccount,
+                    TransactionDate = transfer.TransactionDate
+                }),
+                BankWithdrawals = bankAccount.BankWithdrawals.Select(withdrawal => new AccountWithdrawalResponse
+                {
+                    AccountNumber = withdrawal.AccountNumber,
+                    DebitAmount = withdrawal.Amount,
+                    Balance = withdrawal.Balance,
+                    TransactionDate = withdrawal.TransactionDate
+                }),
+                BankDeposits = bankAccount.BankDeposits.Select(deposit => new CreateBankDepositResponse
+                {
+                    AccountNumber = deposit.AccountNumber,
+                    Deposit = deposit.Amount,
+                    Balance = deposit.Balance,
+                    TransactionDate = deposit.TransactionDate
+                })
+            };
+
+            return APIResponse<TransactionHistoryDto>.Create(HttpStatusCode.OK, "Bank Transactions History", transactionHistory);
+        }
+
+
 
         #region PrivateMethods
         private static string Generate11DigitAccountNumber()
@@ -209,6 +257,8 @@ namespace OpenBanking_API_Service.Service.Implementation
             // Convert the long value to string before returning
             return generatedLongValue.ToString();
         }
+
+
         #endregion
     }
 }
