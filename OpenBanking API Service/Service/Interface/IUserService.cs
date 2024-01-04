@@ -6,9 +6,12 @@ namespace OpenBanking_API_Service.Service.Interface
 {
     public interface IUserService
     {
-        Task<APIResponse<object>> CreateUserWithToken(RegisterUserDto registerUser);
+        Task<APIResponse<object>> RegisterNewUser(RegisterUserDto registerUser);
         Task<APIResponse<LoginResponse>> GetJwtTokenAsync(ApplicationUser user);
-        Task<APIResponse<LoginOtpResponse>> GetOtpByLoginAsync(LoginDto loginDto);
-        Task<APIResponse<LoginResponse>> LogInUserWIthOtpAsync(string otp, string email);
+        Task<APIResponse<LoginOtpResponse>> LoginUserAsync(LoginDto loginDto);
+        Task<APIResponse<LoginResponse>> LoginUserWithTwoFactorEnabled(TwoFactorModel twoFactorModel);
+        Task<APIResponse<object>> PasswordResetAsync(ResetPassword resetPassword);
+        Task<APIResponse<object>> ForgotPasswordRequest(ForgotPassword forgotPassword);
+        Task<APIResponse<object>> UserEmailConfirmation(string token, string email);
     }
 }
