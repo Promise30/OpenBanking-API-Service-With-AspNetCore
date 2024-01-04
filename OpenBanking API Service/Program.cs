@@ -29,9 +29,13 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Adding config for Identity
-builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
+builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
+{
+    options.Tokens.ProviderMap["Email"] = new TokenProviderDescriptor(typeof(EmailTokenProvider<ApplicationUser>));
+})
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
+
 builder.Services.Configure<DataProtectionTokenProviderOptions>(
     options => options.TokenLifespan = TimeSpan.FromMinutes(30)
 
@@ -59,6 +63,13 @@ builder.Services.Configure<IdentityOptions>(
         options.Password.RequireNonAlphanumeric = true;
         options.Password.RequireUppercase = false;
 
+        //Default Lockout settings.
+        options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(2);
+        options.Lockout.MaxFailedAccessAttempts = 3;
+        options.Lockout.AllowedForNewUsers = true;
+
+
+
     }
     );
 
@@ -79,13 +90,11 @@ builder.Services.AddAuthentication(options =>
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
         ClockSkew = TimeSpan.Zero,
-
         ValidAudience = builder.Configuration["JWT:ValidAudience"],
         ValidIssuer = builder.Configuration["JWT:ValidIssuer"],
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JWT:SecretKey"]))
     };
 });
-
 
 
 builder.Services.AddControllers();
