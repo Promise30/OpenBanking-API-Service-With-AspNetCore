@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using OpenBanking_API_Service.Data;
 
@@ -11,9 +12,11 @@ using OpenBanking_API_Service.Data;
 namespace OpenBanking_API_Service.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240103131909_UpdatedAccountRelatedModels")]
+    partial class UpdatedAccountRelatedModels
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -298,7 +301,7 @@ namespace OpenBanking_API_Service.Migrations
                     b.HasIndex("UserId")
                         .IsUnique();
 
-                    b.ToTable("BankAccounts", (string)null);
+                    b.ToTable("BankAccounts");
                 });
 
             modelBuilder.Entity("OpenBanking_API_Service_Common.Library.Entities.Account.BankDeposit", b =>
@@ -327,7 +330,7 @@ namespace OpenBanking_API_Service.Migrations
 
                     b.HasIndex("AccountId");
 
-                    b.ToTable("BankDeposits", (string)null);
+                    b.ToTable("BankDeposits");
                 });
 
             modelBuilder.Entity("OpenBanking_API_Service_Common.Library.Entities.Account.BankTransfer", b =>
@@ -364,7 +367,7 @@ namespace OpenBanking_API_Service.Migrations
 
                     b.HasIndex("AccountId");
 
-                    b.ToTable("BankTransfers", (string)null);
+                    b.ToTable("BankTransfers");
                 });
 
             modelBuilder.Entity("OpenBanking_API_Service_Common.Library.Entities.Account.BankWithdrawal", b =>
@@ -393,7 +396,7 @@ namespace OpenBanking_API_Service.Migrations
 
                     b.HasIndex("AccountId");
 
-                    b.ToTable("BankWithdrawals", (string)null);
+                    b.ToTable("BankWithdrawals");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
