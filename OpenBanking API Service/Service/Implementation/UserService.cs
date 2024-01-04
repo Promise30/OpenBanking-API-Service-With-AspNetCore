@@ -70,8 +70,7 @@ namespace OpenBanking_API_Service.Service.Implementation
                     UserName = registerUser.UserName,
                     SecurityStamp = Guid.NewGuid().ToString(),
                     TwoFactorEnabled = true,
-                    CreatedAt = DateTimeOffset.UtcNow.LocalDateTime,
-                    LockoutEnd = DateTimeOffset.UtcNow.LocalDateTime
+                    CreatedAt = DateTimeOffset.UtcNow.LocalDateTime
                 };
 
                 _logger.LogInformation("Creating new user...");
