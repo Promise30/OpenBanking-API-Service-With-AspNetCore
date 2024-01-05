@@ -44,5 +44,17 @@ namespace OpenBanking_API_Service.Controllers
             }
             return StatusCode((int)transfer.StatusCode, transfer.StatusMessage);
         }
+
+        [Authorize]
+        [HttpPost("account-withdrawal")]
+        public async Task<IActionResult> AccountWithdrawal(CreateBankAccountWithdrawal bankAccountWithdrawal)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(APIResponse<ModelStateDictionary>.Create(HttpStatusCode.BadRequest, "Validation Failed", ModelState));
+            }
+            var result = await _accountService.BankAccountWithdrawal(bankAccountWithdrawal);
+            return result.StatusCode == HttpStatusCode.OK ? Ok(result) : BadRequest(result);
+        }
     }
 }
