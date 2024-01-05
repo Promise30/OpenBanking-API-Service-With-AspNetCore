@@ -67,7 +67,17 @@ namespace OpenBanking_API_Service.Controllers
             }
             var result = await _accountService.BankAccountTransfer(amountTransfer);
             return result.StatusCode == HttpStatusCode.OK ? Ok(result) : BadRequest(result);
+        }
 
+        [HttpGet("transactions-history")]
+        public async Task<IActionResult> TransactionsHistory(Guid accountId)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(APIResponse<ModelStateDictionary>.Create(HttpStatusCode.BadRequest, "Validation Failed", ModelState));
+            }
+            var result = await _accountService.BankAccountTransactionHistory(accountId);
+            return result.StatusCode == HttpStatusCode.OK ? Ok(result) : BadRequest(result);
         }
     }
 }
