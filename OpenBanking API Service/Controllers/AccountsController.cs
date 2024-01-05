@@ -28,5 +28,21 @@ namespace OpenBanking_API_Service.Controllers
             var response = await _accountService.CreateBankAccount(createBankAccountDto);
             return StatusCode((int)response.StatusCode, response.Data);
         }
+
+        [Authorize]
+        [HttpPost("account-deposit")]
+        public async Task<IActionResult> AccountDeposit(string accountNumber, CreateBankAccountDepositDto bankAcountDepositDto)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(APIResponse<ModelStateDictionary>.Create(HttpStatusCode.BadRequest, "Validation Failed", ModelState));
+            }
+            var transfer = await _accountService.BankAccountDeposit(accountNumber, bankAcountDepositDto);
+            if (transfer.Data != null)
+            {
+                return StatusCode((int)transfer.StatusCode, transfer.Data);
+            }
+            return StatusCode((int)transfer.StatusCode, transfer.StatusMessage);
+        }
     }
 }
