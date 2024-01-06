@@ -4,9 +4,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using OpenBanking_API_Service.Data;
+using OpenBanking_API_Service.Service.Constants;
 using OpenBanking_API_Service.Service.Implementation;
 using OpenBanking_API_Service.Service.Interface;
-using OpenBanking_API_Service_Common.Library.Models;
 using Serilog;
 using System.Text;
 
