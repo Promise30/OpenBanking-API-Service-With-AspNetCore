@@ -4,7 +4,6 @@ using Microsoft.IdentityModel.Tokens;
 using OpenBanking_API_Service.Data;
 using OpenBanking_API_Service.Dtos;
 using OpenBanking_API_Service.Service.Interface;
-using OpenBanking_API_Service_Common.Library.Models;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net;
 using System.Security.Claims;
@@ -56,14 +55,12 @@ namespace OpenBanking_API_Service.Service.Implementation
         {
             try
             {
-
-                // Check if user already exists
                 var userExists = await _userManager.FindByEmailAsync(registerUser.Email);
                 if (userExists != null)
                 {
                     return APIResponse<object>.Create(HttpStatusCode.UnprocessableEntity, "User already exists", null);
                 }
-                // Create a new User
+
                 ApplicationUser user = new ApplicationUser
                 {
                     Email = registerUser.Email,
@@ -151,7 +148,7 @@ namespace OpenBanking_API_Service.Service.Implementation
         public async Task<APIResponse<LoginResponse>> LoginUserWithTwoFactorEnabled(TwoFactorModel twoFactorModel)
         {
             var user = await _userManager.FindByEmailAsync(twoFactorModel.Email);
-            //var user = await _signInManager.GetTwoFactorAuthenticationUserAsync();
+
             if (user == null)
             {
                 return APIResponse<LoginResponse>.Create(HttpStatusCode.BadRequest, "User does not exist", null);

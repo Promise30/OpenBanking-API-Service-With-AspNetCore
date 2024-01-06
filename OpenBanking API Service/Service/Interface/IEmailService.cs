@@ -1,4 +1,4 @@
-﻿using OpenBanking_API_Service_Common.Library.Models;
+﻿using OpenBanking_API_Service.Service.Constants;
 
 namespace OpenBanking_API_Service.Service.Interface
 {

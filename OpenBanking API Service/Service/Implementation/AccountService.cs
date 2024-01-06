@@ -1,9 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using OpenBanking_API_Service.Data;
 using OpenBanking_API_Service.Dtos.AccountsDto;
+using OpenBanking_API_Service.Entities.Account;
 using OpenBanking_API_Service.Service.Interface;
-using OpenBanking_API_Service_Common.Library.Entities.Account;
-using OpenBanking_API_Service_Common.Library.Models;
 using System.Net;
 using System.Security.Claims;
 
@@ -66,7 +65,7 @@ namespace OpenBanking_API_Service.Service.Implementation
                     UserId = bankAccount.UserId
                 };
 
-                return new APIResponse<CreateAccountResponse>(HttpStatusCode.OK, "Account created successfully", bankAccountResponse);
+                return new APIResponse<CreateAccountResponse>(HttpStatusCode.Created, "Account created successfully", bankAccountResponse);
             }
             return new APIResponse<CreateAccountResponse>(HttpStatusCode.Unauthorized, "User not authenticated", null);
         }

@@ -1,8 +1,8 @@
 ﻿using MailKit.Net.Smtp;
 using MimeKit;
+using OpenBanking_API_Service.Service.Constants;
 using OpenBanking_API_Service.Service.Interface;
-using OpenBanking_API_Service_Common.Library.Constants;
-using OpenBanking_API_Service_Common.Library.Models;
+
 
 namespace OpenBanking_API_Service.Service.Implementation
 {

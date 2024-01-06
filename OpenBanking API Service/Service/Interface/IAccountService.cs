@@ -1,5 +1,4 @@
 ﻿using OpenBanking_API_Service.Dtos.AccountsDto;
-using OpenBanking_API_Service_Common.Library.Models;
 
 namespace OpenBanking_API_Service.Service.Interface
 {
