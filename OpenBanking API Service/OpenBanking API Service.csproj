@@ -23,7 +23,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\OpenBanking API Service Common.Library\OpenBanking API Service Common.Library.csproj" />
+    <Folder Include="Entities\Authentication\SignIn\" />
+    <Folder Include="Infrastructures\Interface\" />
+    <Folder Include="Infrastructures\Implementation\" />
   </ItemGroup>
 
 </Project>

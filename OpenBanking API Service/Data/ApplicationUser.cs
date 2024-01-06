@@ -1,7 +1,6 @@
 ﻿
 using Microsoft.AspNetCore.Identity;
-using OpenBanking_API_Service_Common.Library.Entities.Account;
-
+using OpenBanking_API_Service.Entities.Account;
 
 namespace OpenBanking_API_Service.Data
 {

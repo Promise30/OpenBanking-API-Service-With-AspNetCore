@@ -1,9 +1,10 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using OpenBanking_API_Service.Data;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using OpenBanking_API_Service.Dtos;
+using OpenBanking_API_Service.Service.Constants;
 using OpenBanking_API_Service.Service.Interface;
-using OpenBanking_API_Service_Common.Library.Models;
+using System.Net;
 
 namespace OpenBanking_API_Service.Controllers
 {
@@ -11,87 +12,118 @@ namespace OpenBanking_API_Service.Controllers
     [ApiController]
     public class AuthenticationController : ControllerBase
     {
-        private readonly ILogger<AuthenticationController> _logger;
         private readonly IUserService _userService;
-        private readonly UserManager<ApplicationUser> _userManager;
         private readonly IEmailService _emailService;
+        private readonly IAccountService _accountService;
 
-        public AuthenticationController(ILogger<AuthenticationController> logger,
-                                        IUserService userService,
+        public AuthenticationController(IUserService userService,
                                         IEmailService emailService,
-                                        UserManager<ApplicationUser> userManager)
+                                        IAccountService accountService)
         {
-            _logger = logger;
             _userService = userService;
             _emailService = emailService;
-            _userManager = userManager;
+            _accountService = accountService;
         }
+        [AllowAnonymous]
         [HttpPost("register")]
         public async Task<IActionResult> Register(RegisterUserDto registerUserDto)
         {
-            var tokenResponse = await _userService.CreateUserWithToken(registerUserDto);
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(APIResponse<ModelStateDictionary>.Create(HttpStatusCode.BadRequest, "Validation Failed", ModelState));
+            }
+            var tokenResponse = await _userService.RegisterNewUser(registerUserDto);
+
             if (tokenResponse.Data != null)
             {
                 var confirmationLink = Url.Action(nameof(ConfirmEmail), "Authentication", new { token = tokenResponse.Data, email = registerUserDto.Email }, Request.Scheme);
                 var message = new EmailMessage(to: new string[] { registerUserDto.Email }, subject: "Email Confirmation", body: confirmationLink);
                 var responseMessage = _emailService.SendEmail(message);
-
-                return StatusCode(StatusCodes.Status200OK,
-                        new Response { IsSuccess = true, Message = $"{tokenResponse.StatusMessage} {responseMessage}" });
-
-
+                return StatusCode(StatusCodes.Status200OK, tokenResponse);
             }
-            return StatusCode(StatusCodes.Status500InternalServerError, new Response { Message = tokenResponse.StatusMessage, IsSuccess = false });
+            return StatusCode(StatusCodes.Status400BadRequest, tokenResponse);
         }
+
         [HttpGet("confirm-email")]
         public async Task<IActionResult> ConfirmEmail(string token, string email)
         {
-            var user = await _userManager.FindByEmailAsync(email);
-            if (user != null)
-            {
-                var result = await _userManager.ConfirmEmailAsync(user, token);
-                if (result.Succeeded)
-                {
-                    return StatusCode(StatusCodes.Status200OK, new Response { Message = "Email verified successfully", IsSuccess = true });
-                }
-            }
-            return StatusCode(StatusCodes.Status400BadRequest, new Response { Message = "Email verification failed. User does not exist.", IsSuccess = false });
+            var result = await _userService.UserEmailConfirmation(token, email);
+            return result.StatusCode == HttpStatusCode.OK ? Ok(result) : BadRequest(result);
 
         }
+
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginDto loginDto)
         {
-            var loginOtpResponse = await _userService.GetOtpByLoginAsync(loginDto);
-            if (loginOtpResponse.Data != null)
+            if (!ModelState.IsValid)
             {
-                var user = loginOtpResponse.Data.User;
-                if (user.TwoFactorEnabled)
-                {
-                    var token = loginOtpResponse.Data?.Token;
-                    var message = new EmailMessage(new string[] { user.Email }, "OTP Confirmation code", token);
-                    _emailService.SendEmail(message);
-
-                    return StatusCode(StatusCodes.Status200OK, new Response { IsSuccess = true, Message = loginOtpResponse.StatusMessage });
-                }
-                if (user != null && await _userManager.CheckPasswordAsync(user, loginDto.Password))
-                {
-                    var response = await _userService.GetJwtTokenAsync(user);
-                    return StatusCode(StatusCodes.Status200OK, response);
-                }
+                return BadRequest(APIResponse<ModelStateDictionary>.Create(HttpStatusCode.BadRequest, "Validation Failed", ModelState));
             }
-            return StatusCode(StatusCodes.Status401Unauthorized, new Response { IsSuccess = false, Message = loginOtpResponse.StatusMessage });
+
+            var result = await _userService.LoginUserAsync(loginDto);
+
+            if (result.Data != null)
+            {
+                var otpToken = result.Data.Token;
+                var message = new EmailMessage(new string[] { loginDto.Email }, "OTP Confirmation Code", otpToken);
+                _emailService.SendEmail(message);
+                return StatusCode(StatusCodes.Status200OK, result);
+
+            }
+            return StatusCode(StatusCodes.Status400BadRequest, result);
         }
 
         [HttpPost("login-2FA")]
-        public async Task<IActionResult> LoginWithOTP(string code, string email)
+        public async Task<IActionResult> Login2FA(TwoFactorModel twoFactorModel)
         {
-            var jwt = await _userService.LogInUserWIthOtpAsync(code, email);
-            if (jwt.Data != null)
+            var result = await _userService.LoginUserWithTwoFactorEnabled(twoFactorModel);
+            if (result.Data != null)
             {
-                return StatusCode(StatusCodes.Status200OK, jwt.Data);
+                return StatusCode(StatusCodes.Status200OK, result);
             }
-            return StatusCode(StatusCodes.Status400BadRequest, new Response { Message = jwt.StatusMessage, IsSuccess = false });
+            return BadRequest(result);
         }
+        [HttpGet("reset-password")]
+        public async Task<IActionResult> ResetPassword(string token, string email)
+        {
+            var model = new ResetPassword { Token = token, Email = email };
+            return Ok(model);
+        }
+
+
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> ResetPassword(ResetPassword resetPassword)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(APIResponse<ModelStateDictionary>.Create(HttpStatusCode.BadRequest, "Validation Failed", ModelState));
+            }
+            var result = await _userService.PasswordResetAsync(resetPassword);
+            return result.StatusCode == HttpStatusCode.OK ? Ok(result) : BadRequest(result);
+        }
+        [HttpPost("forgot-password")]
+        public async Task<IActionResult> ForgotPassword(ForgotPassword forgotPassword)
+        {
+            var result = await _userService.ForgotPasswordRequest(forgotPassword);
+            if (result.Data != null)
+            {
+                var resetPasswordLink = Url.Action(nameof(ResetPassword), "Authentication", new { token = result.Data, email = forgotPassword.Email }, Request.Scheme);
+                var message = new EmailMessage(to: new string[] { forgotPassword.Email }, subject: "Password Reset Confirmation Link", body: resetPasswordLink);
+                var responseMessage = _emailService.SendEmail(message);
+                return StatusCode(StatusCodes.Status200OK, result);
+            }
+
+            return StatusCode(StatusCodes.Status400BadRequest, result);
+
+
+        }
+
+
+
+
+
     }
+
+
 
 }

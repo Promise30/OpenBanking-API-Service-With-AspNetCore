@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using OpenBanking_API_Service.Dtos.AccountsDto;
 using OpenBanking_API_Service.Service.Interface;
-using OpenBanking_API_Service_Common.Library.Models;
 using System.Net;
 
 namespace OpenBanking_API_Service.Controllers
