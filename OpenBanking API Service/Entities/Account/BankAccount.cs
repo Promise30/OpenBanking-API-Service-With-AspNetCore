@@ -10,7 +10,7 @@ namespace OpenBanking_API_Service.Entities.Account
         public string Firstname { get; set; }
         public string Lastname { get; set; }
         public string Middlename { get; set; }
-        public DateOnly DateOfBirth { get; set; }
+        public DateTimeOffset DateOfBirth { get; set; }
         public string Gender { get; set; }
         public string Address { get; set; }
         public string StateOfOrigin { get; set; }
