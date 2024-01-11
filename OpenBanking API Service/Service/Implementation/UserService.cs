@@ -2,7 +2,8 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 using OpenBanking_API_Service.Data;
-using OpenBanking_API_Service.Dtos;
+using OpenBanking_API_Service.Dtos.AuthenticationDtos.Requests;
+using OpenBanking_API_Service.Dtos.AuthenticationDtos.Responses;
 using OpenBanking_API_Service.Service.Interface;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net;
@@ -66,8 +67,7 @@ namespace OpenBanking_API_Service.Service.Implementation
                     Email = registerUser.Email,
                     UserName = registerUser.UserName,
                     SecurityStamp = Guid.NewGuid().ToString(),
-                    TwoFactorEnabled = true,
-                    CreatedAt = DateTimeOffset.UtcNow.LocalDateTime
+                    TwoFactorEnabled = true
                 };
 
                 _logger.LogInformation("Creating new user...");
@@ -200,8 +200,8 @@ namespace OpenBanking_API_Service.Service.Implementation
         private JwtSecurityToken GetToken(List<Claim> authClaims)
         {
             var authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:SecretKey"]));
-            _ = int.TryParse(_configuration["JWT:TokenValidityInMinutes"], out int tokenValidityInMinutes);
-            var expirationTimeUTC = DateTime.UtcNow.AddMinutes(tokenValidityInMinutes);
+            _ = int.TryParse(_configuration["JWT:TokenValidityInDays"], out int tokenValidityInDays);
+            var expirationTimeUTC = DateTime.UtcNow.AddDays(tokenValidityInDays);
             var localTimeZone = TimeZoneInfo.Local;
             var expirationTimeInLocalTimeZone = TimeZoneInfo.ConvertTimeFromUtc(expirationTimeUTC, localTimeZone);
 
