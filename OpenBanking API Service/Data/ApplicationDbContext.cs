@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using OpenBanking_API_Service.Entities.Account;
+using OpenBanking_API_Service.Domain.Entities.Account;
 
 namespace OpenBanking_API_Service.Data
 {
