@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using OpenBanking_API_Service.Data;
+using OpenBanking_API_Service.Extensions;
 using OpenBanking_API_Service.Service.Constants;
 using OpenBanking_API_Service.Service.Implementation;
 using OpenBanking_API_Service.Service.Interface;
@@ -13,6 +14,14 @@ using System.Text;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+
+builder.Services.AddAutoMapper(typeof(Program));
+
+// Configuration from Extensions class
+builder.Services.ConfigureCore();
+builder.Services.ConfigureIISIntegration();
+builder.Services.ConfigureRepositoryManager();
+builder.Services.ConfigureServiceManager();
 
 // Serilog config
 var logger = new LoggerConfiguration()
@@ -37,7 +46,7 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
     .AddDefaultTokenProviders();
 
 builder.Services.Configure<DataProtectionTokenProviderOptions>(
-    options => options.TokenLifespan = TimeSpan.FromMinutes(30)
+    options => options.TokenLifespan = TimeSpan.FromDays(3)
 
     );
 
@@ -49,7 +58,9 @@ builder.Services.AddSingleton(emailConfig);
 
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<IAccountService, AccountService>();
+builder.Services.AddScoped<IBankAccountService, BankAccountService>();
+
+
 
 // Adding config for required email
 builder.Services.Configure<IdentityOptions>(
@@ -71,7 +82,7 @@ builder.Services.Configure<IdentityOptions>(
 
 
     }
-    );
+);
 
 // Adding Authentication settings
 builder.Services.AddAuthentication(options =>
@@ -97,7 +108,11 @@ builder.Services.AddAuthentication(options =>
 });
 
 
-builder.Services.AddControllers();
+builder.Services.AddControllers(options =>
+{
+    options.RespectBrowserAcceptHeader = true;
+    options.ReturnHttpNotAcceptable = true;
+}).AddXmlDataContractSerializerFormatters();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
