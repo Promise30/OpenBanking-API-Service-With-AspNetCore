@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
-using OpenBanking_API_Service.Dtos;
+using OpenBanking_API_Service.Dtos.AuthenticationDtos.Requests;
 using OpenBanking_API_Service.Service.Constants;
 using OpenBanking_API_Service.Service.Interface;
 using System.Net;
@@ -14,11 +14,11 @@ namespace OpenBanking_API_Service.Controllers
     {
         private readonly IUserService _userService;
         private readonly IEmailService _emailService;
-        private readonly IAccountService _accountService;
+        private readonly IBankAccountService _accountService;
 
         public AuthenticationController(IUserService userService,
                                         IEmailService emailService,
-                                        IAccountService accountService)
+                                        IBankAccountService accountService)
         {
             _userService = userService;
             _emailService = emailService;

@@ -1,5 +1,6 @@
 ﻿using OpenBanking_API_Service.Data;
-using OpenBanking_API_Service.Dtos;
+using OpenBanking_API_Service.Dtos.AuthenticationDtos.Requests;
+using OpenBanking_API_Service.Dtos.AuthenticationDtos.Responses;
 
 namespace OpenBanking_API_Service.Service.Interface
 {
