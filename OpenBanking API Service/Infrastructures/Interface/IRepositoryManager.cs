@@ -2,7 +2,11 @@
 {
     public interface IRepositoryManager
     {
-        IAccountRepository Account { get; }
-        void Save();
+        IBankAccountRepository Account { get; }
+        IBankDepositRepository BankDeposit { get; }
+        IBankWithdrawalRepository BankWithdrawal { get; }
+        IBankTransferRepository BankTransfer { get; }
+
+        Task SaveAsync();
     }
 }
