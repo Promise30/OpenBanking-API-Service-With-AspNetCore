@@ -1,5 +1,6 @@
 ﻿using OpenBanking_API_Service.Dtos.AccountsDto.Requests;
 using OpenBanking_API_Service.Dtos.AccountsDto.Responses;
+using OpenBanking_API_Service.RequestFeatures;
 
 namespace OpenBanking_API_Service.Service.Interface
 {
@@ -10,7 +11,7 @@ namespace OpenBanking_API_Service.Service.Interface
         /// Bank Account Service GET request methods
         /// </summary>
 
-        Task<APIResponse<IEnumerable<BankAccountDto>>> GetAllBankAccountsAsync(bool trackChanges);
+        Task<(APIResponse<IEnumerable<BankAccountDto>>, MetaData metaData)> GetAllBankAccountsAsync(AccountParameters accountParameters, bool trackChanges);
         Task<APIResponse<BankAccountDto>> GetBankAccountAsync(Guid accountId, bool trackChanges);
 
 

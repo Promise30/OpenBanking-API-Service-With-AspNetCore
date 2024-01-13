@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using OpenBanking_API_Service.Dtos.AccountsDto.Requests;
+using OpenBanking_API_Service.RequestFeatures;
 using OpenBanking_API_Service.Service.Interface;
 using System.Net;
+using System.Text.Json;
 
 namespace OpenBanking_API_Service.Controllers
 {
@@ -17,10 +19,11 @@ namespace OpenBanking_API_Service.Controllers
 
         //[HttpGet("{accountId:guid}/deposits")]
         [HttpGet("deposits")]
-        public async Task<IActionResult> GetBankDepositsForAccount(Guid accountId)
+        public async Task<IActionResult> GetBankDepositsForAccount(Guid accountId, [FromQuery] AccountTransactionParameters accountTransactionParameters)
         {
-            var deposits = await _serviceManager.TransactionService.GetBankAccountDepositsAsync(accountId, trackChanges: false);
-            return deposits.StatusCode == HttpStatusCode.OK ? Ok(deposits) : StatusCode((int)deposits.StatusCode, deposits);
+            var pagedResult = await _serviceManager.TransactionService.GetBankAccountDepositsAsync(accountId, accountTransactionParameters, trackChanges: false);
+            Response.Headers.Append("X-Pagination", JsonSerializer.Serialize(pagedResult.metaData));
+            return pagedResult.Item1.StatusCode == HttpStatusCode.OK ? Ok(pagedResult.Item1) : StatusCode((int)pagedResult.Item1.StatusCode, pagedResult.Item1);
         }
 
         [HttpGet("deposits/{id:guid}", Name = "GetBankDepositForAccount")]
@@ -39,10 +42,11 @@ namespace OpenBanking_API_Service.Controllers
 
 
         [HttpGet("withdrawals")]
-        public async Task<IActionResult> GetBankWithdrawalsForAccount(Guid accountId)
+        public async Task<IActionResult> GetBankWithdrawalsForAccount(Guid accountId, [FromQuery] AccountTransactionParameters accountTransactionParameters)
         {
-            var withdrawals = await _serviceManager.TransactionService.GetBankAccountWithdrawalsAsync(accountId, trackChanges: false);
-            return withdrawals.StatusCode == HttpStatusCode.OK ? Ok(withdrawals) : StatusCode((int)withdrawals.StatusCode, withdrawals);
+            var pagedResult = await _serviceManager.TransactionService.GetBankAccountWithdrawalsAsync(accountId, accountTransactionParameters, trackChanges: false);
+            Response.Headers.Append("X-Pagination", JsonSerializer.Serialize(pagedResult.metaData));
+            return pagedResult.Item1.StatusCode == HttpStatusCode.OK ? Ok(pagedResult.Item1) : StatusCode((int)pagedResult.Item1.StatusCode, pagedResult.Item1);
         }
 
         [HttpGet("withdrawals/{id:guid}")]
@@ -61,10 +65,11 @@ namespace OpenBanking_API_Service.Controllers
 
 
         [HttpGet("transfers")]
-        public async Task<IActionResult> GetBankTransfersForAccount(Guid accountId)
+        public async Task<IActionResult> GetBankTransfersForAccount(Guid accountId, [FromQuery] AccountTransactionParameters accountTransactionParameters)
         {
-            var transfers = await _serviceManager.TransactionService.GetBankAccountTransfersAsync(accountId, trackChanges: false);
-            return transfers.StatusCode == HttpStatusCode.OK ? Ok(transfers) : StatusCode((int)transfers.StatusCode, transfers);
+            var pagedResult = await _serviceManager.TransactionService.GetBankAccountTransfersAsync(accountId, accountTransactionParameters, trackChanges: false);
+            Response.Headers.Append("X-Pagination", JsonSerializer.Serialize(pagedResult.metaData));
+            return pagedResult.Item1.StatusCode == HttpStatusCode.OK ? Ok(pagedResult.Item1) : StatusCode((int)pagedResult.Item1.StatusCode, pagedResult.Item1);
         }
 
         [HttpGet("transfers/{id:guid}")]

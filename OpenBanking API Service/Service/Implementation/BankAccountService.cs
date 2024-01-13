@@ -3,6 +3,7 @@ using OpenBanking_API_Service.Domain.Entities.Account;
 using OpenBanking_API_Service.Dtos.AccountsDto.Requests;
 using OpenBanking_API_Service.Dtos.AccountsDto.Responses;
 using OpenBanking_API_Service.Infrastructures.Interface;
+using OpenBanking_API_Service.RequestFeatures;
 using OpenBanking_API_Service.Service.Interface;
 using System.Net;
 using System.Security.Claims;
@@ -25,20 +26,24 @@ namespace OpenBanking_API_Service.Service.Implementation
             _logger = logger;
             _mapper = mapper;
         }
-        public async Task<APIResponse<IEnumerable<BankAccountDto>>> GetAllBankAccountsAsync(bool trackChanges)
+        public async Task<(APIResponse<IEnumerable<BankAccountDto>>, MetaData metaData)> GetAllBankAccountsAsync(AccountParameters accountParameters, bool trackChanges)
         {
             try
             {
-                var accounts = await _repositoryManager.Account.GetAllAccountsAsync(trackChanges);
+                //if (!accountParameters.ValidAgeRange)
+                //{
+                //    throw new Exception("Max age cannot be less than minimum age.");
+                //}
+                var accountsWithMetaData = await _repositoryManager.Account.GetAllAccountsAsync(accountParameters, trackChanges);
 
-                var accountsDto = _mapper.Map<IEnumerable<BankAccountDto>>(accounts);
+                var accountsDto = _mapper.Map<IEnumerable<BankAccountDto>>(accountsWithMetaData);
 
-                return APIResponse<IEnumerable<BankAccountDto>>.Create(HttpStatusCode.OK, "Request successful", accountsDto);
+                return (APIResponse<IEnumerable<BankAccountDto>>.Create(HttpStatusCode.OK, "Request successful", accountsDto), metaData: accountsWithMetaData.MetaData);
             }
             catch (Exception ex)
             {
                 _logger.LogError($"Something went wrong in the {nameof(GetAllBankAccountsAsync)} service method {ex}");
-                return APIResponse<IEnumerable<BankAccountDto>>.Create(HttpStatusCode.BadRequest, "Request unsuccessful", null);
+                return (APIResponse<IEnumerable<BankAccountDto>>.Create(HttpStatusCode.BadRequest, "Request unsuccessful", null), metaData: null);
             }
         }
 
@@ -186,7 +191,19 @@ namespace OpenBanking_API_Service.Service.Implementation
             // Convert the long value to string before returning
             return generatedLongValue.ToString();
         }
+        private int CalculateAge(DateTime dateOfBirth)
+        {
+            DateTime today = DateTime.Today;
+            int age = today.Year - dateOfBirth.Year;
 
+            // Adjust age if the birthday hasn't occurred yet this year
+            if (dateOfBirth.Date > today.AddYears(-age))
+            {
+                age--;
+            }
+
+            return age;
+        }
         #endregion
     }
 }

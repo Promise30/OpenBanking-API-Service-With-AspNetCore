@@ -1,5 +1,6 @@
 ﻿using OpenBanking_API_Service.Dtos.AccountsDto.Requests;
 using OpenBanking_API_Service.Dtos.AccountsDto.Responses;
+using OpenBanking_API_Service.RequestFeatures;
 
 namespace OpenBanking_API_Service.Service.Interface
 {
@@ -9,7 +10,7 @@ namespace OpenBanking_API_Service.Service.Interface
         /// Method Definitions for Bank Deposits
         /// </summary>
 
-        Task<APIResponse<IEnumerable<BankAccountDepositResponse>>> GetBankAccountDepositsAsync(Guid accountId, bool trackChanges);
+        Task<(APIResponse<IEnumerable<BankAccountDepositResponse>>, MetaData metaData)> GetBankAccountDepositsAsync(Guid accountId, AccountTransactionParameters accountTransactionParameters, bool trackChanges);
         Task<APIResponse<BankAccountDepositResponse>> GetBankAccountDepositAsync(Guid accountId, Guid id, bool trackChanges);
 
         Task<APIResponse<BankAccountDepositResponse>> CreateBankAccountDepositAsync(CreateBankAccountDeposit createBankAccountDeposit, bool trackChanges);
@@ -18,7 +19,7 @@ namespace OpenBanking_API_Service.Service.Interface
         /// Method defintions for Bank Withdrawals
         ///</summary>
         ///
-        Task<APIResponse<IEnumerable<BankAccountWithdrawalResponse>>> GetBankAccountWithdrawalsAsync(Guid accountId, bool trackChanges);
+        Task<(APIResponse<IEnumerable<BankAccountWithdrawalResponse>>, MetaData metaData)> GetBankAccountWithdrawalsAsync(Guid accountId, AccountTransactionParameters accountTransactionParameters, bool trackChanges);
         Task<APIResponse<BankAccountWithdrawalResponse>> GetBankAccountWithdrawalAsync(Guid accountId, Guid id, bool trackChanges);
         Task<APIResponse<BankAccountWithdrawalResponse>> CreateBankAccountWithdrawalAsync(CreateBankAccountWithdrawal createBankAccountWithdrawal, bool trackChanges);
 
@@ -27,7 +28,7 @@ namespace OpenBanking_API_Service.Service.Interface
         /// Method definitions for Bank Transfers
         ///</summary>
 
-        Task<APIResponse<IEnumerable<BankAccountTransferResponse>>> GetBankAccountTransfersAsync(Guid accountId, bool trackChanges);
+        Task<(APIResponse<IEnumerable<BankAccountTransferResponse>>, MetaData metaData)> GetBankAccountTransfersAsync(Guid accountId, AccountTransactionParameters accountTransactionParameters, bool trackChanges);
         Task<APIResponse<BankAccountTransferResponse>> GetBankAccountTransferAsync(Guid accountId, Guid id, bool trackChanges);
         Task<APIResponse<BankAccountTransferResponse>> CreateBankAccountTransferAsync(CreateBankAccountTransfer createBankAccountTransfer, bool trackChanges);
 

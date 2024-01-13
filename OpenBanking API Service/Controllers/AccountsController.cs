@@ -2,8 +2,10 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using OpenBanking_API_Service.Dtos.AccountsDto.Requests;
+using OpenBanking_API_Service.RequestFeatures;
 using OpenBanking_API_Service.Service.Interface;
 using System.Net;
+using System.Text.Json;
 
 namespace OpenBanking_API_Service.Controllers
 {
@@ -19,10 +21,12 @@ namespace OpenBanking_API_Service.Controllers
 
         [HttpGet]
         //[Authorize(Roles = "Admin")]
-        public async Task<IActionResult> GetBankAccounts()
+        public async Task<IActionResult> GetBankAccounts([FromQuery] AccountParameters accountParameters)
         {
-            var accounts = await _accountService.GetAllBankAccountsAsync(trackChanges: false);
-            return accounts.StatusCode == HttpStatusCode.OK ? Ok(accounts) : StatusCode((int)accounts.StatusCode, accounts);
+            var pagedResult = await _accountService.GetAllBankAccountsAsync(accountParameters, trackChanges: false);
+
+            Response.Headers.Append("X-Pagination", JsonSerializer.Serialize(pagedResult.metaData));
+            return pagedResult.Item1.StatusCode == HttpStatusCode.OK ? Ok(pagedResult.Item1) : StatusCode((int)pagedResult.Item1.StatusCode, pagedResult.Item1);
         }
 
         [HttpGet("{accountId:guid}")]

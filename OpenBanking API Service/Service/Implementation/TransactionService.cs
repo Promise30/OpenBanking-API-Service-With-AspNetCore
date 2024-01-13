@@ -3,6 +3,7 @@ using OpenBanking_API_Service.Domain.Entities.Account;
 using OpenBanking_API_Service.Dtos.AccountsDto.Requests;
 using OpenBanking_API_Service.Dtos.AccountsDto.Responses;
 using OpenBanking_API_Service.Infrastructures.Interface;
+using OpenBanking_API_Service.RequestFeatures;
 using OpenBanking_API_Service.Service.Interface;
 using System.Net;
 
@@ -19,24 +20,28 @@ namespace OpenBanking_API_Service.Service.Implementation
             _logger = logger;
             _mapper = mapper;
         }
-        public async Task<APIResponse<IEnumerable<BankAccountDepositResponse>>> GetBankAccountDepositsAsync(Guid accountId, bool trackChanges)
+        public async Task<(APIResponse<IEnumerable<BankAccountDepositResponse>>, MetaData metaData)> GetBankAccountDepositsAsync(Guid accountId, AccountTransactionParameters accountTransactionParameters, bool trackChanges)
         {
             try
             {
                 var bankAccount = await _repositoryManager.Account.GetBankAccountAsync(accountId, trackChanges);
                 if (bankAccount == null)
                 {
-                    return APIResponse<IEnumerable<BankAccountDepositResponse>>.Create(HttpStatusCode.NotFound, "Bank account does not exist.", null);
+                    return (APIResponse<IEnumerable<BankAccountDepositResponse>>.Create(HttpStatusCode.NotFound, "Bank account does not exist.", null), metaData: null);
                 }
-                var depositsFromDb = await _repositoryManager.BankDeposit.GetBankAccountDepositsAsync(accountId, trackChanges);
-                var depositsDto = _mapper.Map<IEnumerable<BankAccountDepositResponse>>(depositsFromDb);
+                if (!accountTransactionParameters.ValidAmountRange)
+                {
+                    throw new Exception("Max amount cannot be less than min amount");
+                }
+                var depositsWithMetaData = await _repositoryManager.BankDeposit.GetBankAccountDepositsAsync(accountId, accountTransactionParameters, trackChanges);
+                var depositsDto = _mapper.Map<IEnumerable<BankAccountDepositResponse>>(depositsWithMetaData);
 
-                return APIResponse<IEnumerable<BankAccountDepositResponse>>.Create(HttpStatusCode.OK, "Request successful.", depositsDto);
+                return (APIResponse<IEnumerable<BankAccountDepositResponse>>.Create(HttpStatusCode.OK, "Request successful.", depositsDto), metaData: depositsWithMetaData.MetaData);
             }
             catch (Exception ex)
             {
                 _logger.LogError($"Something went wrong in the {nameof(GetBankAccountDepositsAsync)} service method {ex}");
-                return APIResponse<IEnumerable<BankAccountDepositResponse>>.Create(HttpStatusCode.InternalServerError, "Internal Server error", null);
+                return (APIResponse<IEnumerable<BankAccountDepositResponse>>.Create(HttpStatusCode.InternalServerError, "Internal Server error", null), metaData: null);
 
             }
         }
@@ -108,24 +113,30 @@ namespace OpenBanking_API_Service.Service.Implementation
             }
         }
 
-        public async Task<APIResponse<IEnumerable<BankAccountWithdrawalResponse>>> GetBankAccountWithdrawalsAsync(Guid accountId, bool trackChanges)
+
+        public async Task<(APIResponse<IEnumerable<BankAccountWithdrawalResponse>>, MetaData metaData)> GetBankAccountWithdrawalsAsync(Guid accountId, AccountTransactionParameters accountTransactionParameters, bool trackChanges)
         {
             try
             {
                 var bankAccount = await _repositoryManager.Account.GetBankAccountAsync(accountId, trackChanges);
                 if (bankAccount == null)
                 {
-                    return APIResponse<IEnumerable<BankAccountWithdrawalResponse>>.Create(HttpStatusCode.NotFound, "Bank account does not exist.", null);
+                    return (APIResponse<IEnumerable<BankAccountWithdrawalResponse>>.Create(HttpStatusCode.NotFound, "Bank account does not exist.", null), metaData: null);
                 }
-                var withdrawalFromDb = await _repositoryManager.BankWithdrawal.GetBankAccountWithdrawalsAsync(accountId, trackChanges);
-                var withdrawalsDto = _mapper.Map<IEnumerable<BankAccountWithdrawalResponse>>(withdrawalFromDb);
+                if (!accountTransactionParameters.ValidAmountRange)
+                {
+                    throw new Exception("Max amount cannot be less than min amount");
+                }
 
-                return APIResponse<IEnumerable<BankAccountWithdrawalResponse>>.Create(HttpStatusCode.OK, "Request successful.", withdrawalsDto);
+                var withdrawalsWithMetaData = await _repositoryManager.BankWithdrawal.GetBankAccountWithdrawalsAsync(accountId, accountTransactionParameters, trackChanges);
+                var withdrawalsDto = _mapper.Map<IEnumerable<BankAccountWithdrawalResponse>>(withdrawalsWithMetaData);
+
+                return (APIResponse<IEnumerable<BankAccountWithdrawalResponse>>.Create(HttpStatusCode.OK, "Request successful.", withdrawalsDto), metaData: withdrawalsWithMetaData.MetaData);
             }
             catch (Exception ex)
             {
                 _logger.LogError($"Something went wrong in the {nameof(GetBankAccountWithdrawalsAsync)} service method {ex}");
-                return APIResponse<IEnumerable<BankAccountWithdrawalResponse>>.Create(HttpStatusCode.InternalServerError, "Internal Server error", null);
+                return (APIResponse<IEnumerable<BankAccountWithdrawalResponse>>.Create(HttpStatusCode.InternalServerError, "Internal Server error", null), metaData: null);
 
             }
         }
@@ -202,24 +213,28 @@ namespace OpenBanking_API_Service.Service.Implementation
             }
         }
 
-        public async Task<APIResponse<IEnumerable<BankAccountTransferResponse>>> GetBankAccountTransfersAsync(Guid accountId, bool trackChanges)
+        public async Task<(APIResponse<IEnumerable<BankAccountTransferResponse>>, MetaData metaData)> GetBankAccountTransfersAsync(Guid accountId, AccountTransactionParameters accountTransactionParameters, bool trackChanges)
         {
             try
             {
                 var bankAccount = await _repositoryManager.Account.GetBankAccountAsync(accountId, trackChanges);
                 if (bankAccount == null)
                 {
-                    return APIResponse<IEnumerable<BankAccountTransferResponse>>.Create(HttpStatusCode.NotFound, "Bank account does not exist.", null);
+                    return (APIResponse<IEnumerable<BankAccountTransferResponse>>.Create(HttpStatusCode.NotFound, "Bank account does not exist.", null), metaData: null);
                 }
-                var transfersFromDb = await _repositoryManager.BankTransfer.GetBankAccountTransfersAsync(accountId, trackChanges);
-                var transfersDto = _mapper.Map<IEnumerable<BankAccountTransferResponse>>(transfersFromDb);
+                if (!accountTransactionParameters.ValidAmountRange)
+                {
+                    throw new Exception("Max amount cannot be less than min amount");
+                }
+                var transfersWithMetaData = await _repositoryManager.BankTransfer.GetBankAccountTransfersAsync(accountId, accountTransactionParameters, trackChanges);
+                var transfersDto = _mapper.Map<IEnumerable<BankAccountTransferResponse>>(transfersWithMetaData);
 
-                return APIResponse<IEnumerable<BankAccountTransferResponse>>.Create(HttpStatusCode.OK, "Request successful.", transfersDto);
+                return (APIResponse<IEnumerable<BankAccountTransferResponse>>.Create(HttpStatusCode.OK, "Request successful.", transfersDto), metaData: transfersWithMetaData.MetaData);
             }
             catch (Exception ex)
             {
                 _logger.LogError($"Something went wrong in the {nameof(GetBankAccountTransfersAsync)} service method {ex}");
-                return APIResponse<IEnumerable<BankAccountTransferResponse>>.Create(HttpStatusCode.InternalServerError, "Internal Server error", null);
+                return (APIResponse<IEnumerable<BankAccountTransferResponse>>.Create(HttpStatusCode.InternalServerError, "Internal Server error", null), metaData: null);
 
             }
         }
