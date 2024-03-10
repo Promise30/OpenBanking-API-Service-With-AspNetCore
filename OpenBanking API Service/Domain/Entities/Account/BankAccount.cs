@@ -1,4 +1,5 @@
 ﻿using OpenBanking_API_Service.Data;
+using OpenBanking_API_Service.Domain.Enums;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace OpenBanking_API_Service.Domain.Entities.Account
@@ -19,7 +20,8 @@ namespace OpenBanking_API_Service.Domain.Entities.Account
         public string? City { get; set; }
         public string? State { get; set; }
         public string BirthCountry { get; set; }
-        public string MaritalStatus { get; set; }
+        public MaritalStatus MaritalStatus { get; set; }
+        public AccountType AccountType { get; set; }
 
         // Account Holder Information
         public int Pin { get; set; }
