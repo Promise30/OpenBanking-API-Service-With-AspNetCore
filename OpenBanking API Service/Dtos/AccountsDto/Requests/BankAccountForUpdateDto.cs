@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace OpenBanking_API_Service.Dtos.AccountsDto.Requests
 {
-    public class CreateBankAccount
+    public class BankAccountForUpdateDto
     {
         [Required(ErrorMessage = "FirstName is required")]
         public string FirstName { get; set; } = string.Empty;
@@ -37,6 +37,5 @@ namespace OpenBanking_API_Service.Dtos.AccountsDto.Requests
         [Required]
         [Range(1000, 9999, ErrorMessage = "Pin must be 4 characters.")]
         public int Pin { get; set; }
-
     }
 }
