@@ -2,6 +2,7 @@
 {
     public class BankAccountTransferResponse
     {
+        public Guid Id { get; set; }
         public string SourceAccount { get; set; }
         public double Amount { get; set; }
         public double AccountBalance { get; set; }
