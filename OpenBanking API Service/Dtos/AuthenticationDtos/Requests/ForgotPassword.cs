@@ -4,8 +4,8 @@ namespace OpenBanking_API_Service.Dtos.AuthenticationDtos.Requests
 {
     public class ForgotPassword
     {
-        [Required]
+        [Required(ErrorMessage = "Email address is required.")]
         [EmailAddress]
-        public string Email { get; set; }
+        public string Email { get; set; } = null!;
     }
 }
