@@ -2,8 +2,9 @@
 {
     public class LoginResponse
     {
-        public string Token { get; set; }
+        public string AccessToken { get; set; }
         public DateTime TokenExpiryDate { get; set; }
+        public string RefreshToken { get; set; }
     }
 
 }
