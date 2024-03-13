@@ -1,24 +1,21 @@
 ﻿using System.Net;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace OpenBanking_API_Service
 {
     public class APIResponse<T>
     {
         public HttpStatusCode StatusCode { get; set; }
-        public string StatusMessage { get; set; }
+        public string ErrorMessage { get; set; }
         public T Data { get; set; }
-        public Error Error { get; set; }
-        public APIResponse(HttpStatusCode statusCode, string message, T data, Error error = null)
+        public APIResponse(HttpStatusCode statusCode, T data, string errorMessage)
         {
             StatusCode = statusCode;
-            StatusMessage = message;
             Data = data;
-            Error = error;
+            ErrorMessage = errorMessage;
         }
-        public static APIResponse<T> Create(HttpStatusCode statusCode, string message, T data, Error error = null)
+        public static APIResponse<T> Create(HttpStatusCode statusCode, T data, string errorMessage)
         {
-            return new APIResponse<T>(statusCode, message, data, error);
+            return new APIResponse<T>(statusCode, data, errorMessage);
         }
     }
 }
