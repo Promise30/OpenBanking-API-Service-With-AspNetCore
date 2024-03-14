@@ -28,9 +28,7 @@ namespace OpenBanking_API_Service.Infrastructures.Implementation
             .Sort(accountTransactionParameters.OrderBy)
             .ToListAsync();
 
-            var count = await FindByCondition(d => d.AccountId.Equals(accountId), trackChanges).CountAsync();
-
-            return new PagedList<BankWithdrawal>(withdrawals, count, accountTransactionParameters.PageNumber, accountTransactionParameters.PageSize);
+            return PagedList<BankWithdrawal>.ToPagedList(withdrawals, accountTransactionParameters.PageNumber, accountTransactionParameters.PageSize);
         }
 
     }
