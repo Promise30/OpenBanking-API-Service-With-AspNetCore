@@ -11,5 +11,6 @@ public interface IBankAccountRepository
     bool AccountExists(string accountNumber, bool trackChanges);
     void CreateBankAccount(BankAccount bankAccount);
     Task<BankAccount> GetBankAccountByAccountNumberAsync(string accountNumber, bool trackChanges);
+    void DeleteBankAccount(BankAccount bankAccount);
 
 }

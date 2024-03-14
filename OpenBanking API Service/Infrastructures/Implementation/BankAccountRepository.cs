@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using OpenBanking_API_Service.Data;
 using OpenBanking_API_Service.Domain.Entities.Account;
+using OpenBanking_API_Service.Extensions;
 using OpenBanking_API_Service.Infrastructures.Interface;
 using OpenBanking_API_Service.RequestFeatures;
 
@@ -21,10 +22,16 @@ namespace OpenBanking_API_Service.Infrastructures.Implementation
             Create(bankAccount);
         }
 
+        public void DeleteBankAccount(BankAccount bankAccount) => Delete(bankAccount);
+
+
         public async Task<PagedList<BankAccount>> GetAllAccountsAsync(AccountParameters accountParameters, bool trackChanges)
         {
             var accounts = await FindAll(trackChanges)
-                            .ToListAsync();
+                .FilterBankAccounts(accountParameters.MinAmount, accountParameters.MaxAmount)
+                .Search(accountParameters.SearchTerm)
+                .Sort(accountParameters.OrderBy)
+                .ToListAsync();
 
             return PagedList<BankAccount>.ToPagedList(accounts, accountParameters.PageNumber, accountParameters.PageSize);
         }
