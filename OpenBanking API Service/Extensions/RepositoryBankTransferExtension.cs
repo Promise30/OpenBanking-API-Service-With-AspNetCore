@@ -5,21 +5,9 @@ namespace OpenBanking_API_Service.Extensions
 {
     public static class RepositoryBankTransferExtensions
     {
-        public static object BindingFlags { get; private set; }
 
-        public static IQueryable<BankTransfer> FilterBankTransfers(this IQueryable<BankTransfer> bankTransfers, uint minAmount, uint maxAmount) =>
+        public static IQueryable<BankTransfer> FilterBankTransfers(this IQueryable<BankTransfer> bankTransfers, double minAmount, double maxAmount) =>
             bankTransfers.Where(d => (d.Amount >= minAmount && d.Amount <= maxAmount));
-
-        public static IQueryable<BankTransfer> Search(this IQueryable<BankTransfer> bankTransfers, string searchTerm)
-        {
-            if (string.IsNullOrEmpty(searchTerm))
-            {
-                return bankTransfers;
-            }
-            var lowerCase = searchTerm.ToLower();
-            //return bankDeposits.Where(e => e.Amount.ToLower().Contains(lowerCase));
-            return null;
-        }
         public static IQueryable<BankTransfer> Sort(this IQueryable<BankTransfer> bankTransfers, string orderByQueryString)
         {
             if (string.IsNullOrWhiteSpace(orderByQueryString))

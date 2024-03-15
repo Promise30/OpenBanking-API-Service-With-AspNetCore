@@ -5,21 +5,9 @@ namespace OpenBanking_API_Service.Extensions
 {
     public static class RepositoryBankWithdrawalExtensions
     {
-        public static object BindingFlags { get; private set; }
 
-        public static IQueryable<BankWithdrawal> FilterBankWithdrawals(this IQueryable<BankWithdrawal> bankWithdrawals, uint minAmount, uint maxAmount) =>
+        public static IQueryable<BankWithdrawal> FilterBankWithdrawals(this IQueryable<BankWithdrawal> bankWithdrawals, double minAmount, double maxAmount) =>
             bankWithdrawals.Where(d => (d.Amount >= minAmount && d.Amount <= maxAmount));
-
-        public static IQueryable<BankWithdrawal> Search(this IQueryable<BankWithdrawal> bankWithdrawals, string searchTerm)
-        {
-            if (string.IsNullOrEmpty(searchTerm))
-            {
-                return bankWithdrawals;
-            }
-            var lowerCase = searchTerm.ToLower();
-            //return bankDeposits.Where(e => e.Amount.ToLower().Contains(lowerCase));
-            return null;
-        }
         public static IQueryable<BankWithdrawal> Sort(this IQueryable<BankWithdrawal> bankWithdrawals, string orderByQueryString)
         {
             if (string.IsNullOrWhiteSpace(orderByQueryString))

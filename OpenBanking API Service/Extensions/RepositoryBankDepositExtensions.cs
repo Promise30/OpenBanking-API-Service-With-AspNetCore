@@ -5,21 +5,10 @@ namespace OpenBanking_API_Service.Extensions
 {
     public static class RepositoryBankDepositExtensions
     {
-        public static object BindingFlags { get; private set; }
-
-        public static IQueryable<BankDeposit> FilterBankDeposits(this IQueryable<BankDeposit> bankDeposits, uint minAmount, uint maxAmount) =>
+        public static IQueryable<BankDeposit> FilterBankDepositsByAmount(this IQueryable<BankDeposit> bankDeposits, double minAmount, double maxAmount) =>
             bankDeposits.Where(d => (d.Amount >= minAmount && d.Amount <= maxAmount));
-
-        public static IQueryable<BankDeposit> Search(this IQueryable<BankDeposit> bankDeposits, string searchTerm)
-        {
-            if (string.IsNullOrEmpty(searchTerm))
-            {
-                return bankDeposits;
-            }
-            var lowerCase = searchTerm.ToLower();
-            //return bankDeposits.Where(e => e.Amount.ToLower().Contains(lowerCase));
-            return null;
-        }
+        public static IQueryable<BankDeposit> FilterBankDepositsByDate(this IQueryable<BankDeposit> bankDeposits, DateTimeOffset startDate, DateTimeOffset endDate) =>
+            bankDeposits.Where(d => d.TransactionDate >= startDate && d.TransactionDate <= endDate);
         public static IQueryable<BankDeposit> Sort(this IQueryable<BankDeposit> bankDeposits, string orderByQueryString)
         {
             if (string.IsNullOrWhiteSpace(orderByQueryString))
