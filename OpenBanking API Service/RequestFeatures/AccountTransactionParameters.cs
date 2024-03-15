@@ -2,11 +2,12 @@
 {
     public class AccountTransactionParameters : RequestParameters
     {
-        public uint MinAmount { get; set; }
-        public uint MaxAmount { get; set; } = int.MaxValue;
+        public double MinAmount { get; set; }
+        public double MaxAmount { get; set; } = double.MaxValue;
 
         public bool ValidAmountRange => MaxAmount > MinAmount;
-        //public string? SearchTerm { get; set; }
+        public DateTimeOffset StartDate { get; set; }
+        public DateTimeOffset EndDate { get; set; }
 
 
         public AccountTransactionParameters() => OrderBy = "transactionDate";
