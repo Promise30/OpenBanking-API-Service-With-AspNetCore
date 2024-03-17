@@ -24,14 +24,13 @@ namespace OpenBanking_API_Service.Infrastructures.Implementation
 
         public async Task<PagedList<BankDeposit>> GetBankAccountDepositsAsync(Guid accountId, AccountTransactionParameters accountTransactionParameters, bool trackChanges)
         {
-            var deposits = await FindByCondition(d => d.AccountId.Equals(accountId) && (d.Amount >= accountTransactionParameters.MinAmount && d.Amount <= accountTransactionParameters.MaxAmount), trackChanges)
-            .FilterBankDeposits(accountTransactionParameters.MinAmount, accountTransactionParameters.MaxAmount)
-            .Sort(accountTransactionParameters.OrderBy)
-            .ToListAsync();
+            var deposits = await FindByCondition(d => d.AccountId.Equals(accountId), trackChanges)
+                            .FilterBankDepositsByAmount(accountTransactionParameters.MinAmount, accountTransactionParameters.MaxAmount)
+                            .FilterBankDepositsByDate(accountTransactionParameters.StartDate, accountTransactionParameters.EndDate)
+                            .Sort(accountTransactionParameters.OrderBy)
+                            .ToListAsync();
 
-            var count = await FindByCondition(d => d.AccountId.Equals(accountId), trackChanges).CountAsync();
-
-            return new PagedList<BankDeposit>(deposits, count, accountTransactionParameters.PageNumber, accountTransactionParameters.PageSize);
+            return PagedList<BankDeposit>.ToPagedList(deposits, accountTransactionParameters.PageNumber, accountTransactionParameters.PageSize);
 
         }
     }
