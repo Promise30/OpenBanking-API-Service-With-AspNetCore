@@ -1,7 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using OpenBanking_API_Service.Data;
 using OpenBanking_API_Service.Domain.Entities.Account;
+using OpenBanking_API_Service.Extensions;
 using OpenBanking_API_Service.Infrastructures.Interface;
+using OpenBanking_API_Service.RequestFeatures;
 
 namespace OpenBanking_API_Service.Infrastructures.Implementation
 {
@@ -20,9 +22,16 @@ namespace OpenBanking_API_Service.Infrastructures.Implementation
            await FindByCondition(d => d.AccountId.Equals(accountId) && d.Id == id, trackChanges)
             .SingleOrDefaultAsync();
 
-        public async Task<IEnumerable<BankDeposit>> GetBankAccountDepositsAsync(Guid accountId, bool trackChanges) =>
-            await FindByCondition(d => d.AccountId.Equals(accountId), trackChanges)
-            .OrderBy(d => d.TransactionDate)
-            .ToListAsync();
+        public async Task<PagedList<BankDeposit>> GetBankAccountDepositsAsync(Guid accountId, AccountTransactionParameters accountTransactionParameters, bool trackChanges)
+        {
+            var deposits = await FindByCondition(d => d.AccountId.Equals(accountId), trackChanges)
+                            .FilterBankDepositsByAmount(accountTransactionParameters.MinAmount, accountTransactionParameters.MaxAmount)
+                            .FilterBankDepositsByDate(accountTransactionParameters.StartDate, accountTransactionParameters.EndDate)
+                            .Sort(accountTransactionParameters.OrderBy)
+                            .ToListAsync();
+
+            return PagedList<BankDeposit>.ToPagedList(deposits, accountTransactionParameters.PageNumber, accountTransactionParameters.PageSize);
+
+        }
     }
 }

@@ -12,8 +12,8 @@ using OpenBanking_API_Service.Data;
 namespace OpenBanking_API_Service.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20240101172944_UpdatedBankTransferModel")]
-    partial class UpdatedBankTransferModel
+    [Migration("20240311214526_InitialMigrationAndSeedDatabase")]
+    partial class InitialMigrationAndSeedDatabase
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -54,14 +54,14 @@ namespace OpenBanking_API_Service.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "188bc835-30b9-42de-813e-54910c9d26ed",
+                            Id = "a6fb327c-a2dc-49ac-b9da-9e3091d345a9",
                             ConcurrencyStamp = "1",
                             Name = "Admin",
                             NormalizedName = "ADMIN"
                         },
                         new
                         {
-                            Id = "29d3dbad-3c79-4cd7-9b91-6c0bcc1463d4",
+                            Id = "b1d8ec59-76ea-43f1-b2bf-25c28eedb229",
                             ConcurrencyStamp = "2",
                             Name = "User",
                             NormalizedName = "USER"
@@ -186,7 +186,7 @@ namespace OpenBanking_API_Service.Migrations
                         .IsConcurrencyToken()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTimeOffset>("CreatedAt")
+                    b.Property<DateTimeOffset>("CreatedDate")
                         .HasColumnType("datetimeoffset");
 
                     b.Property<string>("Email")
@@ -200,6 +200,9 @@ namespace OpenBanking_API_Service.Migrations
                         .HasColumnType("bit");
 
                     b.Property<DateTimeOffset?>("LockoutEnd")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateTimeOffset>("ModifiedDate")
                         .HasColumnType("datetimeoffset");
 
                     b.Property<string>("NormalizedEmail")
@@ -218,6 +221,12 @@ namespace OpenBanking_API_Service.Migrations
 
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("bit");
+
+                    b.Property<string>("RefreshToken")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("RefreshTokenExpiryDate")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("nvarchar(max)");
@@ -242,7 +251,7 @@ namespace OpenBanking_API_Service.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
-            modelBuilder.Entity("OpenBanking_API_Service_Common.Library.Entities.Account.BankAccount", b =>
+            modelBuilder.Entity("OpenBanking_API_Service.Domain.Entities.Account.BankAccount", b =>
                 {
                     b.Property<Guid>("BankAccountId")
                         .ValueGeneratedOnAdd()
@@ -258,14 +267,20 @@ namespace OpenBanking_API_Service.Migrations
                     b.Property<DateTimeOffset>("AccountOpeningDate")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<string>("Address")
+                    b.Property<int>("AccountType")
+                        .HasColumnType("int");
+
+                    b.Property<string>("BirthCountry")
                         .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("City")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("DateOfBirth")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("Firstname")
+                    b.Property<string>("FirstName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -273,23 +288,31 @@ namespace OpenBanking_API_Service.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Lastname")
+                    b.Property<string>("LastName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("MaritalStatus")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("MaritalStatus")
+                        .HasColumnType("int");
 
-                    b.Property<string>("Middlename")
-                        .IsRequired()
+                    b.Property<string>("MiddleName")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("Pin")
                         .HasColumnType("int");
 
-                    b.Property<string>("StateOfOrigin")
+                    b.Property<string>("ResidentAddress")
                         .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ResidentCountry")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ResidentPostalCode")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("State")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("UserId")
@@ -304,74 +327,14 @@ namespace OpenBanking_API_Service.Migrations
                     b.ToTable("BankAccounts");
                 });
 
-            modelBuilder.Entity("OpenBanking_API_Service_Common.Library.Entities.Account.BankDeposit", b =>
+            modelBuilder.Entity("OpenBanking_API_Service.Domain.Entities.Account.BankDeposit", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("AccountNumber")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<double>("Amount")
+                    b.Property<double>("AccountBalance")
                         .HasColumnType("float");
-
-                    b.Property<double>("Balance")
-                        .HasColumnType("float");
-
-                    b.Property<Guid>("BankAccountId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTimeOffset>("TransactionDate")
-                        .HasColumnType("datetimeoffset");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("BankAccountId");
-
-                    b.ToTable("BankDeposits");
-                });
-
-            modelBuilder.Entity("OpenBanking_API_Service_Common.Library.Entities.Account.BankTransfer", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<double>("Amount")
-                        .HasColumnType("float");
-
-                    b.Property<Guid>("BankAccountId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("DestinationAccount")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Narration")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("SourceAccount")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTimeOffset>("TransactionDate")
-                        .HasColumnType("datetimeoffset");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("BankAccountId");
-
-                    b.ToTable("BankTransfers");
-                });
-
-            modelBuilder.Entity("OpenBanking_API_Service_Common.Library.Entities.Account.BankWithdrawal", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("AccountId")
                         .HasColumnType("uniqueidentifier");
@@ -383,7 +346,69 @@ namespace OpenBanking_API_Service.Migrations
                     b.Property<double>("Amount")
                         .HasColumnType("float");
 
-                    b.Property<double>("Balance")
+                    b.Property<DateTimeOffset>("TransactionDate")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AccountId");
+
+                    b.ToTable("BankDeposits");
+                });
+
+            modelBuilder.Entity("OpenBanking_API_Service.Domain.Entities.Account.BankTransfer", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<double>("AccountBalance")
+                        .HasColumnType("float");
+
+                    b.Property<Guid>("AccountId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<double>("Amount")
+                        .HasColumnType("float");
+
+                    b.Property<string>("DestinationAccount")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Narration")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SourceAccount")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTimeOffset>("TransactionDate")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AccountId");
+
+                    b.ToTable("BankTransfers");
+                });
+
+            modelBuilder.Entity("OpenBanking_API_Service.Domain.Entities.Account.BankWithdrawal", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<double>("AccountBalance")
+                        .HasColumnType("float");
+
+                    b.Property<Guid>("AccountId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AccountNumber")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<double>("Amount")
                         .HasColumnType("float");
 
                     b.Property<DateTimeOffset>("TransactionDate")
@@ -447,42 +472,42 @@ namespace OpenBanking_API_Service.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("OpenBanking_API_Service_Common.Library.Entities.Account.BankAccount", b =>
+            modelBuilder.Entity("OpenBanking_API_Service.Domain.Entities.Account.BankAccount", b =>
                 {
                     b.HasOne("OpenBanking_API_Service.Data.ApplicationUser", "User")
                         .WithOne("BankAccount")
-                        .HasForeignKey("OpenBanking_API_Service_Common.Library.Entities.Account.BankAccount", "UserId")
+                        .HasForeignKey("OpenBanking_API_Service.Domain.Entities.Account.BankAccount", "UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("OpenBanking_API_Service_Common.Library.Entities.Account.BankDeposit", b =>
+            modelBuilder.Entity("OpenBanking_API_Service.Domain.Entities.Account.BankDeposit", b =>
                 {
-                    b.HasOne("OpenBanking_API_Service_Common.Library.Entities.Account.BankAccount", "BankAccount")
+                    b.HasOne("OpenBanking_API_Service.Domain.Entities.Account.BankAccount", "BankAccount")
                         .WithMany("BankDeposits")
-                        .HasForeignKey("BankAccountId")
+                        .HasForeignKey("AccountId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("BankAccount");
                 });
 
-            modelBuilder.Entity("OpenBanking_API_Service_Common.Library.Entities.Account.BankTransfer", b =>
+            modelBuilder.Entity("OpenBanking_API_Service.Domain.Entities.Account.BankTransfer", b =>
                 {
-                    b.HasOne("OpenBanking_API_Service_Common.Library.Entities.Account.BankAccount", "BankAccount")
+                    b.HasOne("OpenBanking_API_Service.Domain.Entities.Account.BankAccount", "BankAccount")
                         .WithMany("BankTransfers")
-                        .HasForeignKey("BankAccountId")
+                        .HasForeignKey("AccountId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("BankAccount");
                 });
 
-            modelBuilder.Entity("OpenBanking_API_Service_Common.Library.Entities.Account.BankWithdrawal", b =>
+            modelBuilder.Entity("OpenBanking_API_Service.Domain.Entities.Account.BankWithdrawal", b =>
                 {
-                    b.HasOne("OpenBanking_API_Service_Common.Library.Entities.Account.BankAccount", "BankAccount")
+                    b.HasOne("OpenBanking_API_Service.Domain.Entities.Account.BankAccount", "BankAccount")
                         .WithMany("BankWithdrawals")
                         .HasForeignKey("AccountId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -497,7 +522,7 @@ namespace OpenBanking_API_Service.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("OpenBanking_API_Service_Common.Library.Entities.Account.BankAccount", b =>
+            modelBuilder.Entity("OpenBanking_API_Service.Domain.Entities.Account.BankAccount", b =>
                 {
                     b.Navigation("BankDeposits");
 

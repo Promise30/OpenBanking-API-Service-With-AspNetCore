@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace OpenBanking_API_Service.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialMigrationAndSeedRoles : Migration
+    public partial class InitialMigrationAndSeedDatabase : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -32,6 +32,10 @@ namespace OpenBanking_API_Service.Migrations
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    RefreshToken = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    RefreshTokenExpiryDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedDate = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
+                    ModifiedDate = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
                     UserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     Email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
@@ -158,13 +162,116 @@ namespace OpenBanking_API_Service.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "BankAccounts",
+                columns: table => new
+                {
+                    BankAccountId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    AccountNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    AccountBalance = table.Column<double>(type: "float", nullable: false),
+                    FirstName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    LastName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    MiddleName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    DateOfBirth = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Gender = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ResidentCountry = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ResidentAddress = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ResidentPostalCode = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    City = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    State = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    BirthCountry = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    MaritalStatus = table.Column<int>(type: "int", nullable: false),
+                    AccountType = table.Column<int>(type: "int", nullable: false),
+                    Pin = table.Column<int>(type: "int", nullable: false),
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    AccountOpeningDate = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_BankAccounts", x => x.BankAccountId);
+                    table.ForeignKey(
+                        name: "FK_BankAccounts_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "BankDeposits",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    AccountNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Amount = table.Column<double>(type: "float", nullable: false),
+                    AccountBalance = table.Column<double>(type: "float", nullable: false),
+                    TransactionDate = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
+                    AccountId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_BankDeposits", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_BankDeposits_BankAccounts_AccountId",
+                        column: x => x.AccountId,
+                        principalTable: "BankAccounts",
+                        principalColumn: "BankAccountId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "BankTransfers",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    SourceAccount = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Amount = table.Column<double>(type: "float", nullable: false),
+                    AccountBalance = table.Column<double>(type: "float", nullable: false),
+                    Narration = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    DestinationAccount = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    TransactionDate = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
+                    AccountId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_BankTransfers", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_BankTransfers_BankAccounts_AccountId",
+                        column: x => x.AccountId,
+                        principalTable: "BankAccounts",
+                        principalColumn: "BankAccountId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "BankWithdrawals",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Amount = table.Column<double>(type: "float", nullable: false),
+                    AccountBalance = table.Column<double>(type: "float", nullable: false),
+                    AccountNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    AccountId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    TransactionDate = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_BankWithdrawals", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_BankWithdrawals_BankAccounts_AccountId",
+                        column: x => x.AccountId,
+                        principalTable: "BankAccounts",
+                        principalColumn: "BankAccountId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
             migrationBuilder.InsertData(
                 table: "AspNetRoles",
                 columns: new[] { "Id", "ConcurrencyStamp", "Name", "NormalizedName" },
                 values: new object[,]
                 {
-                    { "7955caff-f101-48c3-9f83-faebd1db3736", "2", "User", "USER" },
-                    { "cc042817-efa4-4277-aafd-e50d71200214", "1", "Admin", "ADMIN" }
+                    { "a6fb327c-a2dc-49ac-b9da-9e3091d345a9", "1", "Admin", "ADMIN" },
+                    { "b1d8ec59-76ea-43f1-b2bf-25c28eedb229", "2", "User", "USER" }
                 });
 
             migrationBuilder.CreateIndex(
@@ -205,6 +312,27 @@ namespace OpenBanking_API_Service.Migrations
                 column: "NormalizedUserName",
                 unique: true,
                 filter: "[NormalizedUserName] IS NOT NULL");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_BankAccounts_UserId",
+                table: "BankAccounts",
+                column: "UserId",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_BankDeposits_AccountId",
+                table: "BankDeposits",
+                column: "AccountId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_BankTransfers_AccountId",
+                table: "BankTransfers",
+                column: "AccountId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_BankWithdrawals_AccountId",
+                table: "BankWithdrawals",
+                column: "AccountId");
         }
 
         /// <inheritdoc />
@@ -226,7 +354,19 @@ namespace OpenBanking_API_Service.Migrations
                 name: "AspNetUserTokens");
 
             migrationBuilder.DropTable(
+                name: "BankDeposits");
+
+            migrationBuilder.DropTable(
+                name: "BankTransfers");
+
+            migrationBuilder.DropTable(
+                name: "BankWithdrawals");
+
+            migrationBuilder.DropTable(
                 name: "AspNetRoles");
+
+            migrationBuilder.DropTable(
+                name: "BankAccounts");
 
             migrationBuilder.DropTable(
                 name: "AspNetUsers");

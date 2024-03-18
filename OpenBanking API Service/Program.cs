@@ -1,15 +1,14 @@
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;
+using Microsoft.Extensions.Options;
 using OpenBanking_API_Service.Data;
 using OpenBanking_API_Service.Extensions;
 using OpenBanking_API_Service.Service.Constants;
 using OpenBanking_API_Service.Service.Implementation;
 using OpenBanking_API_Service.Service.Interface;
 using Serilog;
-using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,11 +16,14 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddAutoMapper(typeof(Program));
 
-// Configuration from Extensions class
-builder.Services.ConfigureCore();
+
+
+builder.Services.ConfigureCors();
 builder.Services.ConfigureIISIntegration();
 builder.Services.ConfigureRepositoryManager();
 builder.Services.ConfigureServiceManager();
+builder.Services.AddOutputCache();
+builder.Services.ConfigureRateLimitingOptions();
 
 // Serilog config
 var logger = new LoggerConfiguration()
@@ -31,25 +33,15 @@ var logger = new LoggerConfiguration()
 builder.Logging.ClearProviders();
 builder.Logging.AddSerilog(logger);
 
-// Adding config for EFCore
-
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Adding config for Identity
-builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
-{
-    options.Tokens.ProviderMap["Email"] = new TokenProviderDescriptor(typeof(EmailTokenProvider<ApplicationUser>));
-})
-    .AddEntityFrameworkStores<ApplicationDbContext>()
-    .AddDefaultTokenProviders();
 
 builder.Services.Configure<DataProtectionTokenProviderOptions>(
     options => options.TokenLifespan = TimeSpan.FromDays(3)
 
     );
-
 
 // Email config for MailKit
 
@@ -61,93 +53,20 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IBankAccountService, BankAccountService>();
 
 
-
-// Adding config for required email
-builder.Services.Configure<IdentityOptions>(
-    options =>
-    {
-        options.SignIn.RequireConfirmedEmail = true;
-
-        // Password Settings
-        options.Password.RequireDigit = true;
-        options.Password.RequireLowercase = true;
-        options.Password.RequireNonAlphanumeric = true;
-        options.Password.RequireUppercase = false;
-
-        //Default Lockout settings.
-        options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(2);
-        options.Lockout.MaxFailedAccessAttempts = 3;
-        options.Lockout.AllowedForNewUsers = true;
-
-
-
-    }
-);
-
-// Adding Authentication settings
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
-}).AddJwtBearer(options =>
-{
-    options.SaveToken = true;
-    options.RequireHttpsMetadata = false;
-    options.TokenValidationParameters = new TokenValidationParameters
-    {
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
-        ClockSkew = TimeSpan.Zero,
-        ValidAudience = builder.Configuration["JWT:ValidAudience"],
-        ValidIssuer = builder.Configuration["JWT:ValidIssuer"],
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JWT:SecretKey"]))
-    };
-});
-
+builder.Services.AddAuthentication();
+builder.Services.ConfigureIdentity();
+builder.Services.ConfigureJWT(builder.Configuration);
 
 builder.Services.AddControllers(options =>
 {
     options.RespectBrowserAcceptHeader = true;
     options.ReturnHttpNotAcceptable = true;
+    options.InputFormatters.Insert(0, GetJsonPatchInputFormatter());
 }).AddXmlDataContractSerializerFormatters();
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(options =>
-{
-    options.SwaggerDoc("v1", new OpenApiInfo
-    {
-        Version = "v1",
-        Title = "OpenBanking API Service",
-        Description = "An ASP.NET Core Web API Service for a Banking System.",
-    });
-    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-    {
-        In = ParameterLocation.Header,
-        Description = "Please enter a valid token",
-        Name = "Authorization",
-        Type = SecuritySchemeType.Http,
-        BearerFormat = "JWT",
-        Scheme = "Bearer"
-    });
-    options.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
-        {
-            new OpenApiSecurityScheme
-            {
-                Reference = new OpenApiReference
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
-
-            },
-            new string[]{}
-        }
-    });
-});
+builder.Services.ConfigureSwaggerGen();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -159,9 +78,19 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseCors("CorsPolicy");
+app.UseOutputCache();
+app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
 
 app.Run();
+
+
+NewtonsoftJsonPatchInputFormatter GetJsonPatchInputFormatter() =>
+new ServiceCollection().AddLogging().AddMvc().AddNewtonsoftJson()
+.Services.BuildServiceProvider()
+.GetRequiredService<IOptions<MvcOptions>>().Value.InputFormatters
+.OfType<NewtonsoftJsonPatchInputFormatter>().First();

@@ -3,6 +3,7 @@ using OpenBanking_API_Service.Domain.Entities.Account;
 using OpenBanking_API_Service.Dtos.AccountsDto.Requests;
 using OpenBanking_API_Service.Dtos.AccountsDto.Responses;
 using OpenBanking_API_Service.Infrastructures.Interface;
+using OpenBanking_API_Service.RequestFeatures;
 using OpenBanking_API_Service.Service.Interface;
 using System.Net;
 using System.Security.Claims;
@@ -25,20 +26,24 @@ namespace OpenBanking_API_Service.Service.Implementation
             _logger = logger;
             _mapper = mapper;
         }
-        public async Task<APIResponse<IEnumerable<BankAccountDto>>> GetAllBankAccountsAsync(bool trackChanges)
+        public async Task<(APIResponse<IEnumerable<BankAccountDto>> accounts, MetaData metaData)> GetAllBankAccountsAsync(AccountParameters accountParameters, bool trackChanges)
         {
             try
             {
-                var accounts = await _repositoryManager.Account.GetAllAccountsAsync(trackChanges);
+                if (!accountParameters.ValidAmountRange)
+                {
+                    throw new Exception("Max amount cannot be less than minimum amount.");
+                }
+                var accountsWithMetaData = await _repositoryManager.Account.GetAllAccountsAsync(accountParameters, trackChanges);
 
-                var accountsDto = _mapper.Map<IEnumerable<BankAccountDto>>(accounts);
+                var accountsDto = _mapper.Map<IEnumerable<BankAccountDto>>(accountsWithMetaData);
 
-                return APIResponse<IEnumerable<BankAccountDto>>.Create(HttpStatusCode.OK, "Request successful", accountsDto);
+                return (accounts: APIResponse<IEnumerable<BankAccountDto>>.Create(HttpStatusCode.OK, accountsDto, null), metaData: accountsWithMetaData.MetaData);
             }
             catch (Exception ex)
             {
                 _logger.LogError($"Something went wrong in the {nameof(GetAllBankAccountsAsync)} service method {ex}");
-                return APIResponse<IEnumerable<BankAccountDto>>.Create(HttpStatusCode.BadRequest, "Request unsuccessful", null);
+                return (APIResponse<IEnumerable<BankAccountDto>>.Create(HttpStatusCode.BadRequest, null, "Request unsuccessful"), metaData: null);
             }
         }
 
@@ -51,16 +56,16 @@ namespace OpenBanking_API_Service.Service.Implementation
                 if (bankAccount != null)
                 {
                     var accountDto = _mapper.Map<BankAccountDto>(bankAccount);
-                    return APIResponse<BankAccountDto>.Create(HttpStatusCode.OK, "Request successful", accountDto);
+                    return APIResponse<BankAccountDto>.Create(HttpStatusCode.OK, accountDto, null);
                 }
-                return APIResponse<BankAccountDto>.Create(HttpStatusCode.NotFound, "Bank Account does not exist.", null);
+                return APIResponse<BankAccountDto>.Create(HttpStatusCode.NotFound, null, "Bank Account does not exist.");
 
             }
             catch (Exception ex)
             {
 
                 _logger.LogError($"Something went wrong in the {nameof(GetBankAccountAsync)} service method {ex}");
-                return APIResponse<BankAccountDto>.Create(HttpStatusCode.InternalServerError, "Internal Server error", null);
+                return APIResponse<BankAccountDto>.Create(HttpStatusCode.InternalServerError, null, "Internal Server error");
             }
 
         }
@@ -72,7 +77,7 @@ namespace OpenBanking_API_Service.Service.Implementation
             {
                 if (!_httpContextAccessor.HttpContext.User.Identity.IsAuthenticated)
                 {
-                    return APIResponse<BankAccountDto>.Create(HttpStatusCode.Unauthorized, "User not authenticated", null);
+                    return APIResponse<BankAccountDto>.Create(HttpStatusCode.Unauthorized, null, "User not authenticated");
 
                 }
                 var isAccountNumberExist = true;
@@ -95,6 +100,7 @@ namespace OpenBanking_API_Service.Service.Implementation
                     MiddleName = createBankAccountDto?.MiddleName,
                     Gender = createBankAccountDto.Gender,
                     MaritalStatus = createBankAccountDto.MaritalStatus,
+                    AccountType = createBankAccountDto.AccountType,
                     ResidentCountry = createBankAccountDto.ResidentCountry,
                     ResidentAddress = createBankAccountDto.ResidentAddress,
                     ResidentPostalCode = createBankAccountDto.ResidentPostalCode,
@@ -109,64 +115,66 @@ namespace OpenBanking_API_Service.Service.Implementation
                 await _repositoryManager.SaveAsync();
 
                 var accountToReturn = _mapper.Map<BankAccountDto>(bankAccount);
-                return APIResponse<BankAccountDto>.Create(HttpStatusCode.Created, "Account created successfully", accountToReturn);
+                return APIResponse<BankAccountDto>.Create(HttpStatusCode.Created, accountToReturn, null);
             }
 
             catch (Exception ex)
             {
                 _logger.LogError($"Something went wrong in the {nameof(CreateBankAccountAsync)} service method {ex}");
-                return APIResponse<BankAccountDto>.Create(HttpStatusCode.InternalServerError, "Internal Server error", null);
+                return APIResponse<BankAccountDto>.Create(HttpStatusCode.InternalServerError, null, "Internal Server error");
 
             }
         }
 
+        public async Task<APIResponse<object>> DeleteBankAccountAsync(Guid accountId, bool trackChanges)
+        {
+            try
+            {
+                var account = await _repositoryManager.Account.GetBankAccountAsync(accountId, trackChanges);
+                if (account == null)
+                {
+                    return APIResponse<object>.Create(HttpStatusCode.NotFound, "Account does not exist", null);
+                }
+                _repositoryManager.Account.DeleteBankAccount(account);
+                await _repositoryManager.SaveAsync();
+                return APIResponse<object>.Create(HttpStatusCode.OK, "Operation successful", null);
+            }
+            catch (Exception ex)
+            {
 
+                _logger.LogError($"Something went wrong in the {nameof(DeleteBankAccountAsync)} service method {ex}");
+                return APIResponse<object>.Create(HttpStatusCode.InternalServerError, "Internal Server error", null);
+            }
 
+        }
 
+        public async Task<(BankAccountForUpdateDto bankAccountToPatch, BankAccount bankAccountEntity)> GetBankAccountForPatch(Guid accountId, bool trackChanges)
+        {
+            try
+            {
+                var account = await _repositoryManager.Account.GetBankAccountAsync(accountId, trackChanges);
+                if (account is null)
+                {
+                    throw new BadHttpRequestException("Account does not exist", 404);
+                }
+                var bankAccountToPatch = _mapper.Map<BankAccountForUpdateDto>(account);
+                return (bankAccountToPatch, account);
+            }
+            catch (Exception ex)
+            {
 
+                _logger.LogError($"Something went wrong in the {nameof(GetBankAccountForPatch)} service method {ex}");
+                throw;
+            }
 
-        //public async Task<APIResponse<TransactionHistoryDto>> BankAccountTransactionHistory(Guid accountId)
-        //{
-        //    var bankAccount = _dbContext.BankAccounts
-        //                                    .Include(a => a.BankTransfers)
-        //                                    .Include(a => a.BankWithdrawals)
-        //                                    .Include(a => a.BankDeposits)
-        //                                    .FirstOrDefault(a => a.BankAccountId == accountId);
+        }
 
-        //    if (bankAccount == null)
-        //    {
-        //        return APIResponse<TransactionHistoryDto>.Create(HttpStatusCode.NotFound, $"Account not found.", null);
-        //    }
+        public void SaveChangesForPatch(BankAccountForUpdateDto bankAccountToPatch, BankAccount bankAccount)
+        {
+            _mapper.Map(bankAccountToPatch, bankAccount);
+            _repositoryManager.SaveAsync();
+        }
 
-        //    var transactionHistory = new TransactionHistoryDto
-        //    {
-        //        BankTransfers = bankAccount.BankTransfers.Select(transfer => new BankAccountTransferResponse
-        //        {
-        //            SourceAccount = transfer.SourceAccount,
-        //            Amount = transfer.Amount,
-        //            Balance = transfer.AccountBalance,
-        //            Narration = transfer.Narration,
-        //            DestinationAccount = transfer.DestinationAccount,
-        //            TransactionDate = transfer.TransactionDate
-        //        }),
-        //        BankWithdrawals = bankAccount.BankWithdrawals.Select(withdrawal => new BankAccountWithdrawalResponse
-        //        {
-        //            AccountNumber = withdrawal.AccountNumber,
-        //            DebitAmount = withdrawal.Amount,
-        //            Balance = withdrawal.AccountBalance,
-        //            TransactionDate = withdrawal.TransactionDate
-        //        }),
-        //        BankDeposits = bankAccount.BankDeposits.Select(deposit => new BankAccountDepositResponse
-        //        {
-        //            AccountNumber = deposit.AccountNumber,
-        //            Deposit = deposit.Amount,
-        //            Balance = deposit.AccountBalance,
-        //            TransactionDate = deposit.TransactionDate
-        //        })
-        //    };
-
-        //    return APIResponse<TransactionHistoryDto>.Create(HttpStatusCode.OK, "Bank Transactions History", transactionHistory);
-        //}
 
 
 
@@ -185,6 +193,19 @@ namespace OpenBanking_API_Service.Service.Implementation
 
             // Convert the long value to string before returning
             return generatedLongValue.ToString();
+        }
+        private int CalculateAge(DateTime dateOfBirth)
+        {
+            DateTime today = DateTime.Today;
+            int age = today.Year - dateOfBirth.Year;
+
+            // Adjust age if the birthday hasn't occurred yet this year
+            if (dateOfBirth.Date > today.AddYears(-age))
+            {
+                age--;
+            }
+
+            return age;
         }
 
         #endregion

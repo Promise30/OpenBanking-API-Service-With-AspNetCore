@@ -3,7 +3,6 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
-using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using OpenBanking_API_Service.Data;
 
@@ -12,11 +11,9 @@ using OpenBanking_API_Service.Data;
 namespace OpenBanking_API_Service.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20240109161958_NewPropertiesToBankAccountModel")]
-    partial class NewPropertiesToBankAccountModel
+    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
     {
-        /// <inheritdoc />
-        protected override void BuildTargetModel(ModelBuilder modelBuilder)
+        protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -54,14 +51,14 @@ namespace OpenBanking_API_Service.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "f0024021-7807-43c4-a476-4a94e896a252",
+                            Id = "a6fb327c-a2dc-49ac-b9da-9e3091d345a9",
                             ConcurrencyStamp = "1",
                             Name = "Admin",
                             NormalizedName = "ADMIN"
                         },
                         new
                         {
-                            Id = "2572df33-2465-4e47-aab7-32c23967493b",
+                            Id = "b1d8ec59-76ea-43f1-b2bf-25c28eedb229",
                             ConcurrencyStamp = "2",
                             Name = "User",
                             NormalizedName = "USER"
@@ -222,6 +219,12 @@ namespace OpenBanking_API_Service.Migrations
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("bit");
 
+                    b.Property<string>("RefreshToken")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("RefreshTokenExpiryDate")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("nvarchar(max)");
 
@@ -261,6 +264,9 @@ namespace OpenBanking_API_Service.Migrations
                     b.Property<DateTimeOffset>("AccountOpeningDate")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<int>("AccountType")
+                        .HasColumnType("int");
+
                     b.Property<string>("BirthCountry")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -283,9 +289,8 @@ namespace OpenBanking_API_Service.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("MaritalStatus")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("MaritalStatus")
+                        .HasColumnType("int");
 
                     b.Property<string>("MiddleName")
                         .HasColumnType("nvarchar(max)");

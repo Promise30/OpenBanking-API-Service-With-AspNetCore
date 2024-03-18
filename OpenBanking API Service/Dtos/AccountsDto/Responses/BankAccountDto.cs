@@ -17,16 +17,13 @@
         public string? State { get; set; }
         public string BirthCountry { get; set; }
         public string MaritalStatus { get; set; }
+        public string AccountType { get; set; }
 
         // Account Holder Information
         public int Pin { get; set; }
         public string UserId { get; set; }
-        //public virtual ApplicationUser User { get; set; }
-        public DateTimeOffset AccountOpeningDate { get; set; }
 
-        //public ICollection<BankTransfer> BankTransfers { get; } = new List<BankTransfer>();
-        //public ICollection<BankDeposit> BankDeposits { get; } = new List<BankDeposit>();
-        //public ICollection<BankWithdrawal> BankWithdrawals { get; } = new List<BankWithdrawal>();
+        public DateTimeOffset AccountOpeningDate { get; set; }
 
     }
 }
